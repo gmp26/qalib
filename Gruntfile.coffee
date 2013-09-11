@@ -12,7 +12,7 @@ module.exports = (grunt) ->
         expand: true
         ext: '.js'
 
-  # Load the plugin that provides the "uglify" task.
+  # Load the livescript compiler.
   grunt.loadNpmTasks('grunt-lsc')
 
   # Default task(s).

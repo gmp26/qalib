@@ -2,7 +2,7 @@
 
 # jasmine specs for qalib
 
-describe "qalib", ->
+xdescribe "qalib", ->
   beforeEach(module "app")
 
   qatest = (testData) ->
