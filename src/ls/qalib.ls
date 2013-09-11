@@ -1,0 +1,11 @@
+require 'complex'
+require 'fpolys'
+require 'fractions'
+require 'geometry'
+require 'guessExact'
+require 'helpers'
+require 'polys'
+require 'qalib'
+require 'stats'
+
+require 'problems'

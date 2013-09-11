@@ -1,0 +1,49 @@
+{
+  "name": "qalib",
+  "version": "0.1.0",
+  "description": "A library which generates sixth-form (K12) mathematical fluency exercise questions with answers. The output is in HTML/MathJAX. ",
+  "main": "index.js",
+  "directories": {
+    "src": "src",
+    "test": "test",
+    "dist": "dist"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gmp26/qalib.git"
+  },
+  "keywords": [
+    "mathematics",
+    "K12",
+    "sixth-form",
+    "fluency",
+    "exercise",
+    "generator"
+  ],
+  "author": "Mike Pearson",
+  "contributors": [
+    {
+      "name": "Alex Chan",
+      "email": "ajk44@cam.ac.uk",
+      "url": "https://github.com/alexwlchan"
+    },
+    {
+      "name": "Tom White"
+    },
+    {
+      "name": "Ben Millwood",
+      "email": "bm380@srcf.net"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gmp26/qalib/issues"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-lsc": "~1.0.1"
+  }
+}
