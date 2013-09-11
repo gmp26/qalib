@@ -221,3 +221,9 @@ class c_poly
               q += "(" + @[i].write() + ")" + l + "^" + i
             j = true
     return q
+
+module.exports = {
+  complex:complex
+  Complex:Complex
+  c_poly:c_poly
+}

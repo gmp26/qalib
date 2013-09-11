@@ -1,19 +1,9 @@
 'use strict'
 
-# jasmine specs for controllers go here
+# jasmine specs for qalib
 
-describe "mathmoController", ->
+describe "qalib", ->
   beforeEach(module "app")
-
-  scope = {} # We need this declared outside the scope of beforeEach
-
-  beforeEach inject ($rootScope, $controller) ->
-    scope := $rootScope.$new!
-    $controller "mathmoController" {
-      $scope: scope
-    }
-
-    pane = scope.addQSet "unit-test"
 
   qatest = (testData) ->
 
