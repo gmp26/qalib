@@ -1643,6 +1643,7 @@ function curry$(f, bound){
 /*
  * mathmo question/answer configuration
  */
+require('./problems')(typeof window != 'undefined' && window !== null ? window : exports);
 module.exports = function(manifest){
   return {
     topicById: function(id){
@@ -1688,7 +1689,7 @@ module.exports = function(manifest){
       }
     ],
     topics: {
-      "C1": ["Partial fractions", window.makePartial],
+      "C1": ["Partial fractions", makePartial],
       "C2": ["Binomial theorem", makeBinomial2],
       "C3": ["Polynomial integration", makePolyInt],
       "C4": ["Trig integration", makeTrigInt],
@@ -1750,7 +1751,7 @@ module.exports = function(manifest){
     }
   };
 };
-},{}],8:[function(require,module,exports){
+},{"./problems":9}],8:[function(require,module,exports){
 module.exports = function(polys){
   var ascoeff, abscoeff, express, polyexpand, p_quadratic, p_linear, p_const, poly;
   polys.ascoeff = ascoeff = function(a){
@@ -2010,6 +2011,14 @@ module.exports = function(polys){
 },{}],9:[function(require,module,exports){
 module.exports = function(problems){
   var makePartial, makeBinomial2, makePolyInt, makeTrigInt, makeVector, makeLines, makeLinesEq, makeLineParPerp, makeCircleEq, makeCircLineInter, makeIneq, makeAP, makeFactor, makeQuadratic, makeComplete, makeBinExp, makeLog, makeStationary, makeTriangle, makeCircle, makeSolvingTrig, makeVectorEq, makeModulus, makeTransformation, makeComposition, makeParametric, makeImplicit, makeChainRule, makeProductRule, makeQuotientRule, makeGP, makeImplicitFunction, makeIntegration, makeDE, makePowers, makeHCF, makeLCM, makeDiophantine, makeDistance, makeCircumCircle, makeCArithmetic, makeCPolar, makeDETwoHard, makeMatrixQ, makeMatrix2, makeMatrix3, makeTaylor, makePolarSketch, makeFurtherVector, makeNewtonRaphson, makeFurtherIneq, makeSubstInt, makeRevolution, makeMatXforms, makeDiscreteDistn, makeContinDistn, makeHypTest, makeConfidInt, makeChiSquare, makeProductMoment;
+  require('./complex')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./fpolys')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./fractions')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./geometry')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./guessExact')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./polys')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./helpers')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./stats')(typeof window != 'undefined' && window !== null ? window : exports);
   problems.makePartial = makePartial = function(){
     var makePartial1, makePartial2, qa;
     makePartial1 = function(){
@@ -4641,7 +4650,7 @@ module.exports = function(problems){
     qa = [qString, aString];
     return qa;
   };
-  problems.maleNewtonRaphson = makeNewtonRaphson = function(){
+  problems.makeNewtonRaphson = makeNewtonRaphson = function(){
     var fns, difs, fnf, diff, which, p, np, i$, i, q, nq, n, x, qString, aString, to$, eff, effdash, qa;
     fns = ["\\ln(z)", "e^{z}", "\\csc(z)", "\\sec(z)", "\\sin(z)", "\\tan(z)", "\\cos(z)"];
     difs = ["\\frac{1}{z}", "e^{z}", " - \\csc(z)\\cot(z)", "\\sec(z)\\tan(z)", "\\cos(z)", "\\sec^2(z)", " - \\sin(z)"];
@@ -5466,7 +5475,7 @@ module.exports = function(problems){
   };
   return problems;
 };
-},{}],10:[function(require,module,exports){
+},{"./complex":1,"./fpolys":2,"./fractions":3,"./geometry":4,"./guessExact":5,"./helpers":6,"./polys":8,"./stats":11}],10:[function(require,module,exports){
 require('./complex')(typeof window != 'undefined' && window !== null ? window : exports);
 require('./fpolys')(typeof window != 'undefined' && window !== null ? window : exports);
 require('./fractions')(typeof window != 'undefined' && window !== null ? window : exports);

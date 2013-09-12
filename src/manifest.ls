@@ -1,9 +1,9 @@
 /*
  * mathmo question/answer configuration
  */
+(require './problems')(window ? exports)
+
 module.exports = (manifest) ->
-
-
 
   topicById: (id) -> @topics[id]
   topicTitleById: (id) -> @topics[id][0]

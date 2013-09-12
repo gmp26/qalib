@@ -3,6 +3,16 @@
 #
 module.exports = (problems) ->
 
+  (require './complex') (window ? exports)
+  (require './fpolys') (window ? exports)
+  (require './fractions') (window ? exports)
+  (require './geometry') (window ? exports)
+  (require './guessExact') (window ? exports)
+  (require './polys') (window ? exports)
+  (require './helpers') (window ? exports) 
+  (require './stats') (window ? exports)
+
+
   # partial fractions
   problems.makePartial = makePartial = ->
 
@@ -2542,7 +2552,7 @@ module.exports = (problems) ->
 
 
 
-  problems.maleNewtonRaphson = makeNewtonRaphson = ->
+  problems.makeNewtonRaphson = makeNewtonRaphson = ->
     fns = ["\\ln(z)", "e^{z}", "\\csc(z)", "\\sec(z)", "\\sin(z)", "\\tan(z)", "\\cos(z)"]
     difs = ["\\frac{1}{z}", "e^{z}", " - \\csc(z)\\cot(z)", "\\sec(z)\\tan(z)", "\\cos(z)", "\\sec^2(z)", " - \\sin(z)"]
     fnf = [Math.log, Math.exp, (x) -> (1 / Math.sin(x)), (x) -> (1 / Math.cos(x)), Math.sin, Math.tan, Math.cos]
