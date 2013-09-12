@@ -1,16 +1,10 @@
-# require 'complex'
-# require 'fpolys'
-# require 'fractions'
-# require 'geometry'
-# require 'guessExact'
-# require 'helpers'
-# require 'polys'
-# require 'qalib'
-
-(window ? exports).qa = (require './stats') {}
-
-console.log "qa = #{qa}"
-for own k,v of qa
-  console.log "#k : #v"
-
-# require 'problems'
+(require './complex') (window ? exports)
+(require './fpolys') (window ? exports)
+(require './fractions') (window ? exports)
+(require './geometry') (window ? exports)
+(require './guessExact') (window ? exports)
+(require './polys') (window ? exports)
+(require './helpers') (window ? exports) 
+(require './stats') (window ? exports)
+(require './manifest') (window ? exports)
+(require './problems') (window ? exports) 

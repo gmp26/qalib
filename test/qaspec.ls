@@ -2,25 +2,7 @@
 
 # jasmine specs for qalib
 
-xdescribe "qalib", ->
-  beforeEach(module "app")
-
-  qatest = (testData) ->
-
-    [questionfn, topicId, questiontext, answertext, qNo=0] = testData
-
-    console.log "Testing "+questionfn
-    describe questionfn, (_) ->
-      it "should produce the correct question and answer", ->
-        expect scope.testQ(topicId, qNo+1000)[0] .toBe questiontext
-        expect scope.testQ(topicId, qNo+1000)[1] .toBe answertext
-
-  # qatest = (questionfn, topicId, questiontext, answertext, qNo=0) ->
-  #   console.log "Testing "+questionfn
-  #   describe questionfn, (_) ->
-  #     it "should produce the correct question and answer", ->
-  #       expect scope.testQ(topicId, qNo+1000)[0] .toBe questiontext
-  #       expect scope.testQ(topicId, qNo+1000)[1] .toBe answertext
+describe "qalib", ->
 
   testlist = 
     * "makePartial1"
@@ -52,7 +34,7 @@ xdescribe "qalib", ->
       "C6"
       "Consider the lines$$3x + 3 = - 2y + 2 = - 3z + 1$$and$$- 2x + 1 = y + 2 = - 3z - 3$$Find the angle between them<br>and determine whether they<br>intersect."
       "The angle between the lines is$$\\arccos\\left(\\frac{-20}{7\\sqrt{17}}\\right).$$The lines do not meet."
-      1 # I got a horrible decimal when I used 0 here. Displays fine in the browser, but still need to debig
+      1 # I got a horrible decimal when I used 0 here. Displays fine in the browser, but still need to debug
     * "makeIneq2"
       "C7"
       "By factorising a suitable polynomial, or otherwise, find the values of \\(x\\) which satisfy$$x^2 - 4 < 3x$$"
@@ -338,18 +320,49 @@ xdescribe "qalib", ->
       "For the following data,<ul class=\"exercise\"><li>compute the product moment correlation coefficient, \\({\\bf r}\\)</li><li>find the regression line of \\(y\\) on \\(x\\)$$\\begin{array}{c|c}x&y\\\\-3.747&4.948\\\\-5.152&-4.150\\\\-4.576&9.131\\\\-4.771&5.621\\\\-4.975&6.307\\\\-5.926&-9.308\\\\\\end{array}$$</li></ul>"
       "<ul class=\"exercise\"><li>\\({\\bf r} = 0.740\\)</li><li>\\(y = 7.410x + 38.089\\)."
 
+
+  # testQ is a stripped out version of retrieveQ that gets called in unit testing
+  testQ = (topicId, qNo = 1) ->
+
+    name = "unit-test"
+
+    # some questions may have 2 or 3 part ids
+    parts = topicId.split \:
+    if parts.length == 2
+      [topicId, qNo] = parts
+      qNo = +qNo
+    else
+      if parts.length == 3
+        [topicId, qNo, name] = parts
+        qNo = +qNo
+
+    seed = name+'/'+topicId+'/'+qNo
+
+    #Math.seedrandom seed
+
+    maker = window.topicMakerById topicId
+    qa = maker()
+
+    [qa[0], qa[1]]
+
+  qatest = (testData) ->
+
+    [questionfn, topicId, questiontext, answertext, qNo=0] = testData
+
+    console.log "Testing "+questionfn
+    describe questionfn, (_) ->
+      it "should produce the correct question and answer", ->
+        expect testQ(topicId, qNo+1000)[0] .toBe questiontext
+        expect testQ(topicId, qNo+1000)[1] .toBe answertext
+
+
   console.log ""
   console.log "Starting mathmo unit tests"
   console.log "-----------------------------------------"
-  console.log ""
+  console.log "testlist.length = #{testlist.length}"
 
   for testData in testlist
     qatest testData
-
-    # if i.length == 4
-    #   qatest(i[0], i[1], i[2], i[3])
-    # else
-    #   qatest(i[0], i[1], i[2], i[3], i[4])
 
   console.log ""
   console.log "Mathmo unit tests finished"

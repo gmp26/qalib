@@ -2,7 +2,6 @@
   "name": "qalib",
   "version": "0.1.0",
   "description": "A library which generates sixth-form (K12) mathematical fluency exercise questions with answers. The output is in HTML/MathJAX. ",
-  "main": "index.js",
   "directories": {
     "src": "src",
     "test": "test",
