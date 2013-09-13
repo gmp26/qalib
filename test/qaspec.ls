@@ -1,6 +1,9 @@
 'use strict'
 
 # jasmine specs for qalib
+qa = {}
+(require 'qalib') qa
+console.log "qa.name = #{qa.name}"
 
 describe "qalib", ->
 
@@ -340,7 +343,7 @@ describe "qalib", ->
 
     #Math.seedrandom seed
 
-    maker = window.topicMakerById topicId
+    maker = qa.topicMakerById topicId
     qa = maker()
 
     [qa[0], qa[1]]

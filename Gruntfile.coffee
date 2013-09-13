@@ -22,6 +22,8 @@ module.exports = (grunt) ->
 
     browserify:
       dist:
+        options:
+          alias: './tmp/qalib.js:qalib'
         files:
           './dist/qalib.js': './tmp/qalib.js'
         # src: './tmp/qalib.js'

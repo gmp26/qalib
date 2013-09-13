@@ -1,9 +1,1650 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+;(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+module.exports = function(cplex){
+  var complex, Complex, c_poly;
+  cplex.complex = complex = (function(){
+    complex.displayName = 'complex';
+    var prototype = complex.prototype, constructor = complex;
+    function complex(Re, Im){
+      this.Re = Re;
+      this.Im = Im;
+    }
+    prototype.set = function(Re, Im){
+      this.Re = Re;
+      this.Im = Im;
+      return this;
+    };
+    prototype.ptoc = function(Mod, Arg){
+      var z;
+      z = new complex;
+      z.Re = Mod * Math.cos(Arg);
+      z.Im = Mod * Math.sin(Arg);
+      return z;
+    };
+    prototype.random = function(maxentry, rad){
+      var z;
+      z = new complex;
+      z = Complex.ptoc(rand(0, maxentry), Math.PI * rand(0, rad * 2) / rad);
+      return z;
+    };
+    prototype.randnz = function(maxentry, rad){
+      var z;
+      z = new complex;
+      z = Complex.ptoc(rand(1, maxentry), Math.PI * rand(0, rad * 2) / rad);
+      return z;
+    };
+    prototype.ctop = function(z){
+      var Mod, Arg;
+      z == null && (z = this);
+      Mod = Math.sqrt(Math.pow(z.Re, 2) + Math.pow(z.Im, 2));
+      Arg = Math.atan2(z.Im, z.Re);
+      return [Mod, Arg];
+    };
+    prototype.isnull = function(){
+      return !(this.Re || this.Im);
+    };
+    prototype.write = function(){
+      var u;
+      u = [guessExact(this.Re), guessExact(this.Im)];
+      if (u[1] === 0) {
+        return u[0];
+      } else if (u[0] === 0) {
+        return ascoeff(u[1]) + "i";
+      } else {
+        return (u[0] + " + " + ascoeff(u[1]) + "i").replace(/\+ \-/g, '-');
+      }
+    };
+    prototype.add = function(u, v){
+      var w;
+      w = new complex(this.Re + u, this.Im + v);
+      return w;
+    };
+    prototype.times = function(u, v){
+      var w;
+      w = new complex(this.Re * u - this.Im * v, this.Re * v + this.Im * u);
+      return w;
+    };
+    prototype.divide = function(u, v){
+      var d, w;
+      d = Math.pow(u, 2) + Math.pow(v, 2);
+      w = new complex((u * this.Re + v * this.Im) / d, (u * this.Im - v * this.Re) / d);
+      return w;
+    };
+    prototype.equals = function(u, v){
+      return this.Re === u && this.Im === v;
+    };
+    return complex;
+  }());
+  cplex.Complex = Complex = new complex;
+  cplex.c_poly = c_poly = (function(){
+    c_poly.displayName = 'c_poly';
+    var prototype = c_poly.prototype, constructor = c_poly;
+    function c_poly(rank){
+      this.rank;
+    }
+    prototype.terms = function(){
+      var n, i$, to$, i;
+      n = 0;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        if (!this[i].isnull) {
+          n++;
+        }
+      }
+      return n;
+    };
+    prototype.set = function(){
+      var i$, to$, i, results$ = [];
+      this.rank = this.set.arguments.length - 1;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(this[i] = this.set.arguments.argument[i]);
+      }
+      return results$;
+    };
+    prototype.setrand = function(maxentry, rad){
+      var i$, to$, i;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        this[i] = Complex.random(maxentry, rad);
+      }
+      if (this[this.rank].isnull) {
+        return this[this.rank].set(1, 0);
+      }
+    };
+    prototype.compute = function(z){
+      var y, zp, i$, to$, i, zi;
+      y = new complex(0, 0);
+      zp = z.ctop();
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        zi = Complex.ptoc(Math.pow(zp[0], i), zp[1] * i);
+        y = y.add(zi[0], zi[1]);
+      }
+      return y;
+    };
+    prototype.xthru = function(x){
+      var i$, to$, i, results$ = [];
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(this[i] = this[i].times(z.Re, z.Im));
+      }
+      return results$;
+    };
+    prototype.addp = function(x){
+      var i$, to$, i, results$ = [];
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(this[i] = this[i].add(x[i].Re, x[i].Im));
+      }
+      return results$;
+    };
+    prototype.diff = function(d){
+      var i$, to$, i;
+      d.rank = rank - 1;
+      for (i$ = 0, to$ = this.rank - 1; i$ <= to$; ++i$) {
+        i = i$;
+        d[i] = this[i + 1].times(i + 1, 0);
+      }
+      return d;
+    };
+    prototype.integ = function(d){
+      var i$, to$, i;
+      d.rank = rank + 1;
+      for (i$ = 0, to$ = this.rank - 1; i$ <= to$; ++i$) {
+        i = i$;
+        d[i + 1] = this[i].divide(i + 1, 0);
+      }
+      return d;
+    };
+    prototype.write = function(l){
+      var q, j, i$, i;
+      l == null && (l = "z");
+      q = "";
+      j = false;
+      for (i$ = this.rank; i$ >= 0; --i$) {
+        i = i$;
+        if (!this[i].isnull()) {
+          if (j) {
+            if ((this[i].Im === 0 && this[i].Re < 0) || (this[i].Re === 0 && this[i].Im < 0)) {
+              q += " - ";
+            } else {
+              q += " + ";
+            }
+            j = false;
+          }
+          switch (i) {
+          case 0:
+            q += this[i].write();
+            j = true;
+            break;
+          case 1:
+            if (this[i].equals(1, 0) || this[i].equals(-1, 0)) {
+              q += l;
+            } else if (this[i].equals(0, 1) || this[i].equals(0, -1)) {
+              q += "i" + l;
+            } else if (this[i].Im === 0 && this[i].Re < 0) {
+              q += Math.abs(this[i].Re) + l;
+            } else if (this[i].Re === 0 && this[i].Im < 0) {
+              q += Math.abs(this[i].Im) + "i" + l;
+            } else {
+              q += "(" + this[i].write() + ")" + l;
+            }
+            j = true;
+            break;
+          default:
+            if (this[i].equals(1, 0) || this[i].equals(-1, 0)) {
+              q += l + "^" + i;
+            } else if (this[i].equals(0, 1) || this[i].equals(0, -1)) {
+              q += "i" + l + "^" + i;
+            } else if (this[i].Im === 0 && this[i].Re < 0) {
+              q += Math.abs(this[i].Re) + l + "^" + i;
+            } else if (this[i].Re === 0 && this[i].Im < 0) {
+              q += Math.abs(this[i].Im) + "i" + l + "^" + i;
+            } else {
+              q += "(" + this[i].write() + ")" + l + "^" + i;
+            }
+            j = true;
+          }
+        }
+      }
+      return q;
+    };
+    prototype.rwrite = function(l){
+      var q, j, i$, to$, i;
+      l == null && (l = "z");
+      q = "";
+      j = false;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        if (!this[i].isnull()) {
+          if (j) {
+            if ((this[i].Im === 0 && this[i].Re < 0) || (this[i].Re === 0 && this[i].Im < 0)) {
+              q += " - ";
+            } else {
+              q += " + ";
+            }
+            j = false;
+          }
+          switch (i) {
+          case 0:
+            q += this[i].write();
+            j = true;
+            break;
+          case 1:
+            if (this[i].equals(1, 0) || this[i].equals(-1, 0)) {
+              q += l;
+            } else if (this[i].equals(0, 1) || this[i].equals(0, -1)) {
+              q += "i" + l;
+            } else if (this[i].Im === 0 && this[i].Re < 0) {
+              q += Math.abs(this[i].Re) + l;
+            } else if (this[i].Re === 0 && this[i].Im < 0) {
+              q += Math.abs(this[i].Im) + "i" + l;
+            } else {
+              q += "(" + this[i].write() + ")" + l;
+            }
+            j = true;
+            break;
+          default:
+            if (this[i].equals(1, 0) || this[i].equals(-1, 0)) {
+              q += l + "^" + i;
+            } else if (this[i].equals(0, 1) || this[i].equals(0, -1)) {
+              q += "i" + l + "^" + i;
+            } else if (this[i].Im === 0 && this[i].Re < 0) {
+              q += Math.abs(this[i].Re) + l + "^" + i;
+            } else if (this[i].Re === 0 && this[i].Im < 0) {
+              q += Math.abs(this[i].Im) + "i" + l + "^" + i;
+            } else {
+              q += "(" + this[i].write() + ")" + l + "^" + i;
+            }
+            j = true;
+          }
+        }
+      }
+      return q;
+    };
+    return c_poly;
+  }());
+  return cplex;
+};
+},{}],2:[function(require,module,exports){
+module.exports = function(fpolys){
+  var fcoeff, fbcoeff, fpoly;
+  fpolys.fcoeff = fcoeff = function(f, t){
+    if (f.top === f.bot) {
+      return t;
+    } else if (f.top + f.bot === 0) {
+      return "-" + t;
+    } else if (f.top === 0) {
+      return "";
+    } else {
+      return f.write() + t;
+    }
+  };
+  fpolys.fbcoeff = fbcoeff = function(f, t){
+    var g;
+    g = new frac(Math.abs(f.top), Math.abs(f.bot));
+    if (g.top === g.bot) {
+      return t;
+    } else if (g.top === 0) {
+      return "";
+    } else {
+      return g.write() + t;
+    }
+  };
+  fpolys.fpoly = fpoly = (function(){
+    fpoly.displayName = 'fpoly';
+    var prototype = fpoly.prototype, constructor = fpoly;
+    function fpoly(rank){
+      this.rank = rank;
+    }
+    prototype.terms = function(){
+      var n, i$, to$, i;
+      n = 0;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        if (this[i]) {
+          n++;
+        }
+      }
+      return n;
+    };
+    prototype.set = function(){
+      var i$, to$, i, results$ = [];
+      this.rank = this.set.arguments.length - 1;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(this[i] = toFrac(this.set.arguments[i]));
+      }
+      return results$;
+    };
+    prototype.setrand = function(maxentry){
+      var i$, to$, i;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        this[i] = randfrac(12);
+      }
+      if (this[this.rank].top === 0) {
+        this[this.rank].top = maxentry;
+      }
+      return this[this.rank].reduce();
+    };
+    prototype.setpoly = function(a){
+      var i$, to$, i, results$ = [];
+      this.rank = a.rank;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(this[i] = new frac(a[i], 1));
+      }
+      return results$;
+    };
+    prototype.compute = function(x){
+      var y, i$, to$, i;
+      x = toFrac(x);
+      y = new frac(0, 1);
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        y.add(this[i].top * Math.pow(x.top, i), this[i].bot * Math.pow(x.bot, i));
+      }
+      y.reduce();
+      return y;
+    };
+    prototype.gcd = function(){
+      var g, i$, to$, i, a;
+      g = new frac(0, 1);
+      for (i$ = 0, to$ = this.rank - 1; i$ <= to$; ++i$) {
+        i = i$;
+        g.bot *= this[i].bot;
+      }
+      a = this[this.rank].top * g.bot / this[this.rank].bot;
+      for (i$ = 0, to$ = this.rank - 1; i$ <= to$; ++i$) {
+        i = i$;
+        a = gcd(a, this[i].top * g.bot / this[i].bot);
+      }
+      return g.reduce();
+    };
+    prototype.xthru = function(x){
+      var i$, to$, i, results$ = [];
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(this[i].prod(x));
+      }
+      return results$;
+    };
+    prototype.diff = function(d){
+      var i$, to$, i;
+      d.rank = rank - 1;
+      for (i$ = 0, to$ = this.rank - 1; i$ <= to$; ++i$) {
+        i = i$;
+        d[i] = this[i + 1];
+        d[i].prod(frac(i + 1, 1));
+      }
+      return d;
+    };
+    prototype.integ = function(d){
+      var i$, to$, i;
+      d.rank = this.rank + 1;
+      d[0] = new frac();
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        d[i + 1] = this[i];
+        d[i + 1].bot *= i + 1;
+        d[i + 1].reduce();
+      }
+      return d;
+    };
+    prototype.write = function(){
+      var q, j, i$, i, val, a;
+      q = "";
+      j = false;
+      for (i$ = this.rank; i$ >= 0; --i$) {
+        i = i$;
+        val = this[i].top / this[i].bot;
+        if (val < 0) {
+          if (j) {
+            q += " ";
+          }
+          q += "- ";
+          j = false;
+        } else if (j && val) {
+          q += " + ";
+          j = false;
+        }
+        if (val) {
+          a = new frac(Math.abs(this[i].top, this[i].bot));
+          switch (i) {
+          case 0:
+            q += a.write();
+            j = true;
+            break;
+          case 1:
+            if (a.top === a.bot) {
+              q += "x";
+            } else {
+              q += a.write() + "x";
+            }
+            j = true;
+            break;
+          default:
+            if (a.top === a.bot) {
+              q += "x^" + i;
+            } else {
+              q += a.write() + "x^" + i;
+            }
+            j = true;
+          }
+        }
+        return q;
+      }
+    };
+    prototype.rwrite = function(){
+      var q, j, i$, to$, i, val, a;
+      q = "";
+      j = false;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        val = this[i].top / this[i].bot;
+        if (val < 0) {
+          if (j) {
+            q += " ";
+          }
+          q += "- ";
+          j = false;
+        } else if (j && val) {
+          q += " + ";
+          j = false;
+        }
+        if (val) {
+          a = new frac(Math.abs(this[i].top), Math.abs(this[i].bot));
+          switch (i) {
+          case 0:
+            q += a.write();
+            j = true;
+            break;
+          case 1:
+            if (a.top === a.bot) {
+              q += "x";
+            } else {
+              q += a.write() + "x";
+            }
+            j = true;
+            break;
+          default:
+            if (a.top === a.bot) {
+              q += "x^" + i;
+            } else {
+              q += a.write() + "x^" + i;
+            }
+            j = true;
+          }
+        }
+      }
+      return q;
+    };
+    return fpoly;
+  }());
+  return fpolys;
+};
+},{}],3:[function(require,module,exports){
+module.exports = function(frac){
+  var toFrac, randfrac, fmatrix;
+  frac.frac = frac = (function(){
+    frac.displayName = 'frac';
+    var prototype = frac.prototype, constructor = frac;
+    function frac(top, bot){
+      if (typeof top === "undefined") {
+        this.top = 0;
+      } else {
+        this.top = top;
+      }
+      if (typeof bot === "undefined") {
+        this.bot = 1;
+      } else {
+        this.bot = bot;
+      }
+      this.reduce();
+    }
+    prototype.write = function(){
+      if (this.bot === 1) {
+        return this.top;
+      }
+      if (this.top === 0) {
+        return "0";
+      } else if (this.top > 0) {
+        return "\\frac{" + this.top + "}{" + this.bot + "}";
+      } else {
+        return "-\\frac{" + Math.abs(this.top) + "}{" + this.bot + "}";
+      }
+    };
+    prototype.reduce = function(){
+      var c;
+      if (this.bot < 0) {
+        this.top *= -1;
+        this.bot *= -1;
+      }
+      c = gcd(Math.abs(this.top), this.bot);
+      this.top /= c;
+      return this.bot /= c;
+    };
+    prototype.set = function(a, b){
+      this.top = a;
+      this.bot = b;
+      return this.reduce();
+    };
+    prototype.clone = function(){
+      var f;
+      f = new frac(this.top, this.bot);
+      return f;
+    };
+    prototype.equals = function(b){
+      this.reduce();
+      b.reduce();
+      if (this.top === b.top && this.bot === b.bot) {
+        return 1;
+      } else {
+        return 0;
+      }
+    };
+    prototype.add = function(c, d){
+      d == null && (d = 1);
+      this.set(this.top * d + this.bot * c, this.bot * d);
+      this.reduce();
+      return this;
+    };
+    prototype.prod = function(c){
+      c = toFrac(c);
+      this.set(this.top * c.top, this.bot * c.bot);
+      this.reduce();
+      return this;
+    };
+    return frac;
+  }());
+  frac.toFrac = toFrac = function(n){
+    if (typeof n === "number") {
+      return new frac(n, 1);
+    } else if (n instanceof frac) {
+      return n.clone();
+    } else {
+      throw new Error("toFrac received " + typeof n + " expecting number or frac");
+    }
+  };
+  frac.randfrac = randfrac = function(max){
+    var f;
+    f = new frac(rand(max), randnz(max));
+    f.reduce();
+    return f;
+  };
+  frac.fmatrix = fmatrix = (function(){
+    fmatrix.displayName = 'fmatrix';
+    var prototype = fmatrix.prototype, constructor = fmatrix;
+    function fmatrix(dim){
+      this.dim = dim;
+    }
+    prototype.zero = function(){
+      var i$, to$, i, lresult$, j$, to1$, j, results$ = [];
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        lresult$ = [];
+        this[i] = new Array(this.dim);
+        for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+          j = j$;
+          lresult$.push(this[i][j] = new frac(0));
+        }
+        results$.push(lresult$);
+      }
+      return results$;
+    };
+    prototype.clone = function(){
+      var r, i$, to$, i, j$, to1$, j;
+      r = new fmatrix(this.dim);
+      r.zero();
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+          j = j$;
+          r[i][j] = this[i][j].clone();
+        }
+      }
+      return r;
+    };
+    prototype.set = function(){
+      var args, n, i$, to$, i, lresult$, j$, to1$, j, results$ = [];
+      args = this.set.arguments;
+      n = this.dim;
+      if (args.length === Math.pow(n, 2)) {
+        this.zero();
+        for (i$ = 0, to$ = n - 1; i$ <= to$; ++i$) {
+          i = i$;
+          lresult$ = [];
+          for (j$ = 0, to1$ = n - 1; j$ <= to1$; ++j$) {
+            j = j$;
+            lresult$.push(this[i][j] = toFrac(args[i * n + j]));
+          }
+          results$.push(lresult$);
+        }
+        return results$;
+      } else {
+        throw new Error("Wrong number of elements sent to fmatrix.set()");
+      }
+    };
+    prototype.setrand = function(maxentry){
+      var i$, to$, i, lresult$, j$, to1$, j, results$ = [];
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        lresult$ = [];
+        this[i] = new Array(this.dim);
+        for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+          j = j$;
+          lresult$.push(this[i][j] = toFrac(rand(maxentry)));
+        }
+        results$.push(lresult$);
+      }
+      return results$;
+    };
+    prototype.add = function(a){
+      var s, i$, to$, i, j$, to1$, j;
+      if (this.dim !== a.dim) {
+        throw new Error("Size mismatch matrices sent to matrix.add()");
+      } else {
+        s = new fmatrix(this.dim);
+        for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+          i = i$;
+          s[i] = new Array(this.dim);
+          for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+            j = j$;
+            s[i][j] = this[i][j].clone().add(a[i][j].top, a[i][j].bot);
+          }
+        }
+        return s;
+      }
+    };
+    prototype.times = function(a){
+      var s, i$, to$, i, j$, to1$, j, k$, to2$, k, f;
+      if (this.dim !== a.dim) {
+        throw new Error("Size mismatch matrices sent to matrix.times()");
+      } else {
+        s = new fmatrix(this.dim);
+        for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+          i = i$;
+          s[i] = new Array(this.dim);
+          for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+            j = j$;
+            s[i][j] = toFrac(0);
+          }
+        }
+        for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+          i = i$;
+          for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+            j = j$;
+            for (k$ = 0, to2$ = this.dim - 1; k$ <= to2$; ++k$) {
+              k = k$;
+              f = this[i][j].clone().prod(a[j][k]);
+              s[i][k].add(f.top, f.bot);
+            }
+          }
+        }
+        return s;
+      }
+    };
+    prototype.det = function(){
+      var f, g, res, i$, to$, i, minor, j$, to1$, j, k$, to2$, k;
+      if (this.dim === 1) {
+        return this[0][0].clone();
+      } else if (this.dim === 2) {
+        f = this[0][1].clone().prod(this[1][0]).prod(-1);
+        g = this[0][0].clone().prod(this[1][1]).add(f.top, f.bot);
+        return g.clone();
+      } else {
+        res = new frac(0, 1);
+        for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+          i = i$;
+          minor = new fmatrix(this.dim - 1);
+          for (j$ = 0, to1$ = this.dim - 2; j$ <= to1$; ++j$) {
+            j = j$;
+            minor[j] = new Array(this.dim - 1);
+            for (k$ = 0, to2$ = this.dim - 2; k$ <= to2$; ++k$) {
+              k = k$;
+              if (k >= i) {
+                minor[j][k] = this[j + 1][k + 1].clone();
+              } else {
+                minor[j][k] = this[j + 1][k].clone();
+              }
+            }
+          }
+          if (i % 2 === 1) {
+            f = minor.det().prod(-1).prod(this[0][i]);
+          } else {
+            f = minor.det().prod(this[0][i]);
+          }
+          res = res.add(f.top, f.bot);
+        }
+        return res;
+      }
+    };
+    prototype.T = function(){
+      var res, i$, to$, i, j$, to1$, j;
+      res = new fmatrix(this.dim);
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        res[i] = new Array(this.dim);
+        for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+          j = j$;
+          res[i][j] = this[j][i].clone();
+        }
+      }
+      return res;
+    };
+    prototype.inv = function(){
+      var d, res, cof, i$, to$, i, j$, to1$, j, minor, k$, to2$, k, l$, to3$, l, kk, ll, f;
+      d = this.det();
+      if (d.top === 0) {
+        throw new Error("Singular matrix sent to matrix.inv()");
+      } else if (this.dim === 2) {
+        res = new fmatrix(2);
+        res.set(new frac(this[1][1].top * d.bot, this[1][1].bot * d.top), new frac(-this[0][1].top * d.bot, this[0][1].bot * d.top), new frac(-this[1][0].top * d.bot, this[1][0].bot * d.top), new frac(this[0][0].top * d.bot, this[0][0].bot * d.top));
+        return res;
+      } else {
+        cof = new fmatrix(this.dim);
+        for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+          i = i$;
+          cof[i] = new Array(this.dim);
+          for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+            j = j$;
+            minor = new fmatrix(this.dim - 1);
+            for (k$ = 0, to2$ = this.dim - 2; k$ <= to2$; ++k$) {
+              k = k$;
+              minor[k] = new Array(this.dim);
+              for (l$ = 0, to3$ = this.dim - 2; l$ <= to3$; ++l$) {
+                l = l$;
+                if (k >= i) {
+                  kk = k + 1;
+                } else {
+                  kk = k;
+                }
+                if (l >= j) {
+                  ll = l + 1;
+                } else {
+                  ll = l;
+                }
+                minor[k][l] = this[kk][ll].clone();
+              }
+            }
+            if ((i + j) % 2 === 1) {
+              f = minor.det().prod(-1);
+            } else {
+              f = minor.det();
+            }
+            cof[i][j] = new frac(f.top * d.bot, f.bot * d.top);
+          }
+        }
+        return cof.T();
+      }
+    };
+    prototype.tr = function(){
+      var res, i$, to$, i;
+      res = toFrac(0, 1);
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        res = res.add(this[i][i].top, this[i][i].bot);
+      }
+      return res;
+    };
+    prototype.write = function(){
+      var d, i$, to$, i, j$, to1$, j, res, f;
+      d = 1;
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+          j = j$;
+          this[i][j].reduce();
+          d = lcm(d, this[i][j].bot);
+        }
+      }
+      if (d === 1) {
+        res = "\\begin{pmatrix}";
+      } else {
+        f = new frac(1, d);
+        res = "\\displaystyle " + f.write() + "\\textstyle \\begin{pmatrix} ";
+      }
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        for (j$ = 0, to1$ = this.dim - 1; j$ <= to1$; ++j$) {
+          j = j$;
+          res += this[i][j].top / this[i][j].bot * d;
+          if (j === this.dim - 1) {
+            if (i === this.dim - 1) {
+              res += "\\end{pmatrix}";
+            } else {
+              res += "\\\\";
+            }
+          } else {
+            res += "&";
+          }
+        }
+      }
+      return res;
+    };
+    return fmatrix;
+  }());
+  return frac;
+};
+},{}],4:[function(require,module,exports){
+module.exports = function(ceq){
+  var circleEq1, circleEq2, lineEq1, lineEq2;
+  ceq.circleEq1 = circleEq1 = function(a, b, r){
+    var eqString;
+    if (a == 0) {
+      eqString = "x^2";
+    } else {
+      eqString = "(x" + signedNumber(-a) + ")^2";
+    }
+    if (b == 0) {
+      eqString += "+y^2=";
+    } else {
+      eqString += "+(y" + signedNumber(-b) + ")^2=";
+    }
+    return eqString += Math.pow(r, 2);
+  };
+  ceq.circleEq2 = circleEq2 = function(a, b, r){
+    var C, eqString;
+    C = Math.pow(r, 2) - Math.pow(a, 2) - Math.pow(b, 2);
+    if (a == 0) {
+      eqString = "x^2";
+    } else {
+      eqString = "x^2" + signedNumber(-2 * a) + "x";
+    }
+    if (b == 0) {
+      eqString += "+y^2";
+    } else {
+      eqString += "+y^2" + signedNumber(-2 * b) + "y";
+    }
+    if (C < 0) {
+      return eqString += signedNumber(-C) + "=0";
+    } else {
+      return eqString += "=" + C;
+    }
+  };
+  ceq.lineEq1 = lineEq1 = function(a, b, c, d){
+    var xcoeff, ycoeff, concoeff, h, eqString;
+    xcoeff = b - d;
+    ycoeff = c - a;
+    concoeff = -b * (c - a) + (d - b) * a;
+    h = gcd(xcoeff, ycoeff, concoeff);
+    xcoeff /= h;
+    ycoeff /= h;
+    concoeff /= h;
+    if (xcoeff < 0) {
+      xcoeff *= -1;
+      ycoeff *= -1;
+      concoeff *= -1;
+    }
+    if (xcoeff == 0 && ycoeff < 0) {
+      ycoeff *= -1;
+      concoeff *= -1;
+    }
+    if (xcoeff == 1) {
+      eqString = "x";
+    } else if (xcoeff !== 0) {
+      eqString = xcoeff + "x";
+    }
+    if (xcoeff == 0) {
+      if (ycoeff == 1) {
+        eqString = "y";
+      } else if (ycoeff == -1) {
+        eqString = "-y";
+      } else {
+        eqString = ycoeff + "y";
+      }
+    } else {
+      if (ycoeff == 1) {
+        eqString += "+y";
+      } else if (ycoeff == -1) {
+        eqString += "-y";
+      } else if (ycoeff !== 0) {
+        eqString += signedNumber(ycoeff) + "y";
+      }
+    }
+    if (concoeff !== 0) {
+      eqString += signedNumber(concoeff) + "=0";
+    } else {
+      eqString += "=0";
+    }
+    return eqString;
+  };
+  ceq.lineEq2 = lineEq2 = function(m, c){
+    var eqString;
+    eqString = "y=";
+    if (m == -1) {
+      eqString += "-x";
+    } else if (m == 1) {
+      eqString += "x";
+    } else if (m !== 0) {
+      eqString += m + "x";
+    }
+    if (c !== 0) {
+      if (m == 0) {
+        eqString += c;
+      } else {
+        eqString += signedNumber(c);
+      }
+    }
+    return eqString;
+  };
+  return ceq;
+};
+},{}],5:[function(require,module,exports){
+module.exports = function(gx){
+  /*
+  guessExact = (x) ->
+    n = proxInt(x)
+    if n[0] then return n[1]
+    fac = 1
+  
+    for s from 1 to 6
+      fac *= s
+      d = fac * 12
+      n = proxInt(x * d)
+  
+      if n[0]
+        f = new frac(n[1], d)
+        f.reduce()
+        return f.write()
+  
+      t = 2^s
+  
+      for i from -t to t by 1
+        for j from -t to t by 1
+          for k from 1 to s
+            p = (x - (i / j)) * k
+            n = proxInt(p^2)
+  
+            f = new frac(i,j)
+            f.reduce()
+  
+            if n[0] and n[1] > 1
+              v = new sqroot(n[1]) # v.a*root(v.n)
+              g = new frac(v.a, k)
+              g.reduce()
+  
+              # LS doesn't have a proper ternary operator :(
+              if g.top > 0 then sign = " + " else sign = " - "
+              return f.write + sign + fbcoeff(g, "\\sqrt{" + v.n + "}")
+  
+            p = (x + (i / j)) * k
+            n = proxInt(p^2)
+  
+            if n[0] and n[1] > 1
+              v = new sqroot(n[1]) # v.a*root v.n
+              g = new frac(v.a, k)
+              g.reduce()
+  
+              if g.top > 0 then sign = " + " else sign " - "
+              return "-" + f.write() + sign + fbcoeff(g, "\\sqrt{" + v.n + "}")
+  
+    return x
+  */
+  var guessExact, proxInt;
+  gx.guessExact = guessExact = function(x){
+    var n, sgn1, sgn2, i$, s, j$, to$, i, top, bot, c, v, j, a, k, k$, to1$, l$, to2$;
+    n = proxInt(x);
+    if (n[0]) {
+      return n[1];
+    }
+    sgn1 = function(x){
+      if (x < 0) {
+        return "-";
+      } else {
+        return "";
+      }
+    };
+    sgn2 = function(x){
+      if (x < 0) {
+        return "-";
+      } else {
+        return "+";
+      }
+    };
+    for (i$ = 1; i$ <= 17; ++i$) {
+      s = i$;
+      for (j$ = 2, to$ = 3 + 2 * s; j$ <= to$; ++j$) {
+        i = j$;
+        n = proxInt(x * i);
+        if (n[0]) {
+          top = n[1];
+          bot = i;
+          c = gcd(top, bot);
+          top /= c;
+          bot /= c;
+          return sgn1(x) + "\\frac{" + Math.abs(top) + "}{" + bot + "}";
+        }
+      }
+      n = proxInt(Math.pow(x, 2));
+      if (n[0] && n[1] < s * 10) {
+        v = new sqroot(n[1]);
+        return sgn1(x) + v.write();
+      }
+      for (j$ = 2, to$ = 1 + s; j$ <= to$; ++j$) {
+        i = j$;
+        n = proxInt(Math.pow(x * i, 2));
+        if (n[0] && n[1] < s * 10) {
+          v = new sqroot(n[1]);
+          return sgn1(x) + "\\frac{" + v.write() + "}{" + i + "}";
+        }
+      }
+      for (j$ = 1, to$ = 3 * s; j$ <= to$; ++j$) {
+        j = j$;
+        a = x - j;
+        n = proxInt(Math.pow(a, 2));
+        if (n[0] && n[1] < s * 10) {
+          v = new sqroot(n[1]);
+          return "\\left(" + j + sgn2(a) + v.write() + "\\right)";
+        }
+        a = x + j;
+        n = proxInt(Math.pow(a, 2));
+        if (n[0] && n[1] < s * 10) {
+          v = new sqroot(n[1]);
+          return "\\left(-" + j + sgn2(a) + v.write() + "\\right)";
+        }
+      }
+      for (j$ = 2, to$ = 2 + 2 * s; j$ <= to$; ++j$) {
+        k = j$;
+        for (k$ = 1, to1$ = 1 + 2 * s; k$ <= to1$; ++k$) {
+          j = k$;
+          a = x - j / k;
+          n = proxInt(Math.pow(a, 2));
+          if (n[0] && n[1] < s * 10) {
+            v = new sqroot(n[1]);
+            return "\\left(\\frac{" + j + "}{" + k + "}" + sgn2(a) + v.write() + "\\right)";
+          }
+          a = x + j / k;
+          n = proxInt(Math.pow(a, 2));
+          if (n[0] && n[1] < s * 10) {
+            v = new sqroot(n[1]);
+            return "\\left(-\\frac{" + j + "}{" + k + sgn2(a) + v.write() + "\\right)";
+          }
+        }
+      }
+      for (j$ = 2, to$ = s - 1; j$ <= to$; ++j$) {
+        i = j$;
+        for (k$ = 1, to1$ = 2 + 2 * s; k$ <= to1$; ++k$) {
+          j = k$;
+          a = (x - j) * i;
+          n = proxInt(Math.pow(a, 2));
+          if (n[0] && n[1] < s * 10) {
+            v = new sqroot(n[1]);
+            return "\\left(" + j + sgn2(x - j) + "\\frac{" + v.write() + "}{" + i + "}\\right)";
+          }
+          a = (x + j) * i;
+          n = proxInt(Math.pow(a, 2));
+          if (n[0] && n[1] < s * 10) {
+            v = new sqroot(n[1]);
+            return "\\left(-" + j + sgn2(x + j) + "\\frac{" + v.write() + "}{" + i + "}\\right)";
+          }
+        }
+      }
+      for (j$ = 2, to$ = s - 1; j$ <= to$; ++j$) {
+        i = j$;
+        for (k$ = 2, to1$ = 1 + 2 * s; k$ <= to1$; ++k$) {
+          k = k$;
+          for (l$ = 1, to2$ = 2 * s; l$ <= to2$; ++l$) {
+            j = l$;
+            a = x - j / k;
+            n = proxInt(Math.pow(a * i, 2));
+            if ((n[0] && n[1] < s * 10) && Math.sqrt(n[1]) !== Math.floor(Math.sqrt(n[1]))) {
+              v = new sqroot(n[1]);
+              return "\\left(\\frac{" + j + "}{" + k + "}" + sgn2(a) + "\\frac{" + v.write() + "}{" + i + "}\\right)";
+            }
+            a = x + j / k;
+            n = proxInt(Math.pow(a * i, 2));
+            if ((n[0] && n[1] < s * 10) && Math.sqrt(n[1]) !== Math.floor(Math.sqrt(n[1]))) {
+              v = new sqroot(n[1]);
+              return "\\left(-\\frac{" + j + "}{" + k + "}" + sgn2(a) + "\\frac{" + v.write() + "}{" + i + "}\\right)";
+            }
+          }
+        }
+      }
+    }
+    return x;
+  };
+  gx.proxInt = proxInt = function(x){
+    var n;
+    n = Math.round(x);
+    if (Math.abs(n - x) < (Math.abs(x) + 0.5) * 1e-8) {
+      return [true, n];
+    } else {
+      return [false];
+    }
+  };
+  return gx;
+};
+},{}],6:[function(require,module,exports){
+module.exports = function(helpers){
+  var gcd, lcm, lincombination, sinpi, cospi, rand, randnz, rank, maxel, ranking, distrand, distrandnz, sqroot, vector, ord, ordt, pickrand, epsi, rPad, repeat, signedNumber, simplifySurd;
+  helpers.gcd = gcd = function(){
+    var a, b, i;
+    a = Math.abs(gcd.arguments[0]);
+    b = Math.abs(gcd.arguments[gcd.arguments.length - 1]);
+    i = gcd.arguments.length;
+    while (i > 2) {
+      b = gcd(b, gcd.arguments[i - 2]);
+      i--;
+    }
+    if (a * b === 0) {
+      return a + b;
+    }
+    while ((a = a % b) && (b = b % a)) {}
+    return a + b;
+  };
+  helpers.lcm = lcm = function(){
+    var a, b, i, d;
+    a = Math.abs(lcm.arguments[0]);
+    b = Math.abs(lcm.arguments[lcm.arguments.length - 1]);
+    i = lcm.arguments.length;
+    while (i > 2) {
+      b = lcm(b, lcm.arguments[i - 2]);
+      i--;
+    }
+    if (a * b === 0) {
+      return 0;
+    }
+    d = gcd(a, b);
+    return a * b / d;
+  };
+  helpers.lincombination = lincombination = function(a, b){
+    var x, lastx, y, lasty, quoti, c1, c2, d1, d2, e1, e2;
+    x = 0;
+    lastx = 1;
+    y = 1;
+    lasty = 0;
+    while (b !== 0) {
+      quoti = Math.floor(a / b);
+      c1 = a;
+      c2 = b;
+      a = c2;
+      b = c1 % c2;
+      d1 = x;
+      d2 = lastx;
+      x = d2 - quoti * d1;
+      lastx = d1;
+      e1 = y;
+      e2 = lasty;
+      y = e2 - quoti * e1;
+      lasty = e1;
+    }
+    return [lastx, lasty];
+  };
+  helpers.sinpi = sinpi = function(a, b){
+    var c, A, i$, i;
+    c = gcd(a, b);
+    a /= c;
+    b /= c;
+    if (a === 0) {
+      return [0, 1, 0, 1, 0, 1];
+    }
+    if (a === 1 && b === 6) {
+      return [1, 2, 0, 1, 0, 1];
+    }
+    if (a === 1 && b === 4) {
+      return [0, 1, 1, 2, 0, 1];
+    }
+    if (a === 1 && b === 3) {
+      return [0, 1, 0, 1, 1, 2];
+    }
+    if (a === 1 && b === 2) {
+      return [1, 1, 0, 1, 0, 1];
+    }
+    if (a === 1 && b === 1) {
+      return [0, 1, 0, 1, 0, 1];
+    }
+    if (a / b > 0.5 && a <= b) {
+      return sinpi(b - a, b);
+    }
+    if (a / b > 1 && a / b <= 1.5) {
+      A = new Array(6);
+      A = sinpi(a - b, b);
+      for (i$ = 0; i$ <= 5; i$ += 2) {
+        i = i$;
+        A[i] *= -1;
+      }
+      return A;
+    }
+    if (a / b > 1.5 && a / b < 2) {
+      A = new Array(6);
+      A = sinpi(2 * b - a, b);
+      for (i$ = 0; i$ <= 5; i$ += 2) {
+        i = i$;
+        A[i] *= -1;
+      }
+      return A;
+    }
+    return sinpi(a - 2 * b, b);
+  };
+  helpers.cospi = cospi = function(a, b){
+    return sinpi(2 * a + b, 2 * b);
+  };
+  helpers.rand = rand = function(min, max){
+    if (typeof min === "undefined") {
+      return Math.round(Math.random());
+    }
+    if (typeof max === "undefined") {
+      min = -Math.abs(min);
+      max = Math.abs(min);
+    }
+    return min + Math.floor((max - min + 1) * Math.random());
+  };
+  helpers.randnz = randnz = function(min, max){
+    var a;
+    if (typeof max === "undefined") {
+      min = -Math.abs(min);
+      max = Math.abs(min);
+    }
+    if (min === 0) {
+      min++;
+    }
+    if (max === 0) {
+      max--;
+    }
+    if (min > max) {
+      return min;
+    }
+    if (min < 0 && max > 0) {
+      a = rand(min, max - 1);
+      if (a >= 0) {
+        a++;
+      }
+    } else {
+      a = rand(min, max);
+    }
+    return a;
+  };
+  helpers.rank = rank = function(r){
+    var n, list, i$, to$, i, c;
+    n = rank.arguments.length - 1;
+    if (r === 0) {
+      r = n;
+    }
+    list = new Array(n);
+    for (i$ = 0, to$ = n - 1; i$ <= to$; ++i$) {
+      i = i$;
+      list[i] = rank.arguments[i + 1];
+    }
+    for (i$ = 0, to$ = n - 1; i$ <= to$; ++i$) {
+      i = i$;
+      if (list[i] > list[i + 1]) {
+        c = list[i];
+        list[i] = list[i + 1];
+        list[i + 1] = c;
+        i = -1;
+      }
+    }
+    return list[r - 1];
+  };
+  helpers.maxel = maxel = function(a){
+    var n, m, ma, i$, to$, i;
+    n = a.length;
+    m = a[0];
+    ma = 0;
+    for (i$ = 1, to$ = n - 1; i$ <= to$; ++i$) {
+      i = i$;
+      if (a[i] > m) {
+        m = a[i];
+        ma = i;
+      }
+    }
+    return ma;
+  };
+  helpers.ranking = ranking = function(a){
+    var n, left, right, i$, to$, i, ls, rs, result, lp, rp;
+    n = a.length;
+    if (n > 2) {
+      left = new Array(Math.floor(n / 2));
+      right = new Array(n - left.length);
+      for (i$ = 0, to$ = n - 1; i$ <= to$; ++i$) {
+        i = i$;
+        if (i < left.length) {
+          left[i] = a[i];
+        } else {
+          right[i - left.length] = a[i];
+        }
+      }
+      ls = ranking(left);
+      rs = ranking(right);
+      result = new Array(n);
+      lp = 0;
+      rp = 0;
+      for (i$ = 0, to$ = n - 1; i$ <= to$; ++i$) {
+        i = i$;
+        if (rp === right.length || (lp < left.length && left[ls[lp]] < right[rs[rp]])) {
+          result[i] = ls[lp];
+          lp++;
+        } else {
+          result[i] = rs[rp] + left.length;
+          rp++;
+        }
+      }
+      return result;
+    } else if (n === 2) {
+      if (a[1] < a[0]) {
+        return [1, 0];
+      } else {
+        return [0, 1];
+      }
+    } else {
+      return [0];
+    }
+  };
+  helpers.distrand = distrand = function(n, min, max){
+    var list, res, i$, to$, i, s;
+    if (typeof max === "undefined") {
+      if (typeof min === "undefined") {
+        min = 1;
+        max = n;
+      } else {
+        min = -Math.abs(min);
+        max = Math.abs(min);
+      }
+    }
+    list = new Array(max + 1 - min);
+    res = new Array(n);
+    for (i$ = 0, to$ = max - min; i$ <= to$; ++i$) {
+      i = i$;
+      list[i] = i + min;
+    }
+    for (i$ = 0, to$ = n - 1; i$ <= to$; ++i$) {
+      i = i$;
+      s = rand(i, max - min);
+      res[i] = list[s];
+      list[s] = list[i];
+    }
+    return res;
+  };
+  helpers.distrandnz = distrandnz = function(n, min, max){
+    var a, list, res, i$, to$, i, s;
+    if (typeof max === "undefined") {
+      if (typeof min === "undefined") {
+        min = 1;
+        max = n;
+      } else {
+        min = -Math.abs(min);
+        max = Math.abs(min);
+      }
+    }
+    if (min === 0) {
+      min++;
+    }
+    if (max === 0) {
+      max--;
+    }
+    if (min > max) {
+      return [min];
+    } else {
+      if (min < 0 && max > 0) {
+        a = 0;
+      } else {
+        a = 1;
+      }
+      list = new Array(max + a - min);
+      res = new Array(n);
+      for (i$ = 0, to$ = max + a - min - 1; i$ <= to$; ++i$) {
+        i = i$;
+        list[i] = i + min;
+        if (a === 0 && list[i] >= 0) {
+          list[i]++;
+        }
+      }
+      for (i$ = 0, to$ = n - 1; i$ <= to$; ++i$) {
+        i = i$;
+        s = rand(i, max + a - min - 1);
+        res[i] = list[s];
+        list[s] = list[i];
+      }
+      return res;
+    }
+  };
+  helpers.sqroot = sqroot = (function(){
+    sqroot.displayName = 'sqroot';
+    var prototype = sqroot.prototype, constructor = sqroot;
+    function sqroot(n){
+      var N, A, i;
+      if (n !== Math.floor(n)) {
+        throw new Error("non-integer sent to square root");
+      } else {
+        N = n;
+        A = 1;
+        i = 2;
+        while (Math.pow(i, 2) <= N) {
+          if (N % Math.pow(i, 2) === 0) {
+            N /= Math.pow(i, 2);
+            A *= i;
+          }
+          i++;
+        }
+        this.n = N;
+        this.a = A;
+      }
+      if (this.a % 1 !== 0) {
+        throw new Error("a is not an integer");
+      }
+    }
+    prototype.write = function(){
+      if (this.a === 1 && this.n === 1) {
+        return "1";
+      } else if (this.a === 1) {
+        return "\\sqrt{" + this.n + "}";
+      } else if (this.n === 1) {
+        return this.a;
+      } else {
+        return this.a + "\\sqrt{" + this.n + "}";
+      }
+    };
+    return sqroot;
+  }());
+  helpers.vector = vector = (function(){
+    vector.displayName = 'vector';
+    var prototype = vector.prototype, constructor = vector;
+    function vector(dim){
+      this.dim = dim;
+    }
+    prototype.set = function(){
+      var i$, to$, i, results$ = [];
+      this.dim = this.set.arguments.length;
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(this[i] = this.set.arguments[i]);
+      }
+      return results$;
+    };
+    prototype.setrand = function(maxentry){
+      var i$, to$, i, results$ = [];
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(this[i] = Math.round(-maxentry + 2 * maxentry * Math.random()));
+      }
+      return results$;
+    };
+    prototype.dot = function(U){
+      var sum, i$, to$, i;
+      sum = 0;
+      for (i$ = 0, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        sum += this[i] * U[i];
+      }
+      if (sum % 1 !== 0) {
+        throw new Error("dot product is not an integer");
+      }
+      return sum;
+    };
+    prototype.cross = function(U){
+      var res, i$, i, j$, j, k$, k;
+      if (this.dim === 3 && U.dim === 3) {
+        res = new vector(3);
+        res.set(0, 0, 0);
+        for (i$ = 0; i$ <= 2; ++i$) {
+          i = i$;
+          for (j$ = 0; j$ <= 2; ++j$) {
+            j = j$;
+            for (k$ = 0; k$ <= 2; ++k$) {
+              k = k$;
+              res[i] += epsi(i, j, k) * this[j] * U[k];
+            }
+          }
+        }
+        return res;
+      } else {
+        throw new Error("cross product called on vectors other than 3D");
+      }
+    };
+    prototype.mag = function(){
+      if (this.dot(this) % 1 !== 0) {
+        throw new Error("magnitude is not an integer");
+      }
+      return this.dot(this);
+    };
+    prototype.write = function(){
+      var q, i$, to$, i;
+      q = "\\begin{pmatrix}" + this[0];
+      for (i$ = 1, to$ = this.dim - 1; i$ <= to$; ++i$) {
+        i = i$;
+        q += "\\\\" + this[i];
+      }
+      return q + "\\end{pmatrix}";
+    };
+    return vector;
+  }());
+  helpers.ord = ord = function(n){
+    if (n < 0) {
+      throw new Error("negative ordinal requested from ord()");
+    }
+    if (Math.floor(n / 10) === 1) {
+      n + "th";
+    }
+    if (n % 10 === 1) {
+      return n + "st";
+    } else if (n % 10 === 2) {
+      return n + "nd";
+    } else if (n % 10 === 3) {
+      return n + "rd";
+    } else {
+      return n + "th";
+    }
+  };
+  helpers.ordt = ordt = function(n){
+    if (n < 0) {
+      throw new Error("negative ordinal requested from ord()");
+    }
+    if (n <= 12) {
+      return ["zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"][n];
+    } else {
+      return ord(n);
+    }
+  };
+  helpers.pickrand = pickrand = function(){
+    return pickrand.arguments[rand(0, pickrand.arguments.length - 1)];
+  };
+  helpers.epsi = epsi = function(i, j, k){
+    return (i - j) * (j - k) * (k - i) / 2;
+  };
+  helpers.rPad = rPad = function(n, len, char){
+    var s, i$, i;
+    s = n.toString();
+    for (i$ = s.length + 1; i$ <= len; ++i$) {
+      i = i$;
+      s += char;
+    }
+    return s;
+  };
+  helpers.repeat = repeat = curry$(function(num, s){
+    return (function(){
+      var i$, to$, results$ = [];
+      for (i$ = 0, to$ = num; i$ < to$; ++i$) {
+        results$.push(s);
+      }
+      return results$;
+    }()).join("");
+  });
+  helpers.signedNumber = signedNumber = function(x){
+    if (x > 0) {
+      return "+" + x;
+    } else {
+      return x.toString();
+    }
+  };
+  helpers.simplifySurd = simplifySurd = function(a, b, c, d){
+    var sq, B, C, f, top, h, innerSurd;
+    sq = new sqroot(c);
+    B = sq.a * b;
+    C = sq.n;
+    if (d === 0) {
+      return "Error; zero in the denominator";
+    } else if (a === 0) {
+      f = new frac(B, d);
+      if (C === 1) {
+        return f.write();
+      } else {
+        if (f.top === 1) {
+          top = "";
+        } else if (f.top === -1) {
+          top = "-";
+        } else {
+          top = f.top;
+        }
+        if (f.bot === 1) {
+          return top + "\\sqrt{" + C + "}";
+        } else {}
+        return "\\frac{" + top + "\\sqrt{" + C + "}}{" + f.bot + "}";
+      }
+    } else if (B === 0 || C === 0) {
+      f = new frac(a, d);
+      return f.write();
+    } else if (C === 1) {
+      f = new frac(a + B, d);
+      return f.write();
+    } else {
+      h = gcd(a, B, d);
+      a /= h;
+      B /= h;
+      d /= h;
+      if (d < 0) {
+        a *= -1;
+        B *= -1;
+        d *= -1;
+      }
+      innerSurd = function(x, y, z){
+        if (y === 1) {
+          return x + "+\\sqrt{" + z + "}";
+        } else if (y === -1) {
+          return x + "-\\sqrt{" + z + "}";
+        } else {
+          return x + signedNumber(y) + "\\sqrt{" + z + "}";
+        }
+      };
+      if (d === 1) {
+        return innerSurd(a, B, C);
+      } else {
+        return "\\frac{" + innerSurd(a, B, C) + "}{" + d + "}";
+      }
+    }
+  };
+  return helpers;
+};
+function curry$(f, bound){
+  var context,
+  _curry = function(args) {
+    return f.length > 1 ? function(){
+      var params = args ? args.concat() : [];
+      context = bound ? context || this : this;
+      return params.push.apply(params, arguments) <
+          f.length && arguments.length ?
+        _curry.call(context, params) : f.apply(context, params);
+    } : f;
+  };
+  return _curry();
+}
+},{}],7:[function(require,module,exports){
 /*
  * mathmo question/answer configuration
  */
+require('./problems')(typeof window != 'undefined' && window !== null ? window : exports);
 module.exports = function(manifest){
-  require('./problems')(manifest);
   return {
     topicById: function(id){
       return this.topics[id];
@@ -110,9 +1751,274 @@ module.exports = function(manifest){
     }
   };
 };
-},{"./problems":2}],2:[function(require,module,exports){
+},{"./problems":9}],8:[function(require,module,exports){
+module.exports = function(polys){
+  var ascoeff, abscoeff, express, polyexpand, p_quadratic, p_linear, p_const, poly;
+  polys.ascoeff = ascoeff = function(a){
+    if (a === 1) {
+      return "";
+    } else if (a === -1) {
+      return "-";
+    } else {
+      return a;
+    }
+  };
+  polys.abscoeff = abscoeff = function(a){
+    a = Math.abs(a);
+    if (a === 1) {
+      return "";
+    } else {
+      return a;
+    }
+  };
+  polys.express = express = function(a){
+    var r, n, p, t, s, i$, to$, i, q;
+    r = "";
+    n = a.length;
+    p = ranking(a);
+    t = 0;
+    s = new poly(1);
+    s[1] = 1;
+    for (i$ = 0, to$ = n - 1; i$ <= to$; ++i$) {
+      i = i$;
+      if (i && a[p[i]] === q) {
+        t++;
+      } else {
+        if (t) {
+          r += "^" + (t + 1);
+        }
+        t = 0;
+        s[0] = a[p[i]];
+        r += "(" + s.write() + ")";
+        q = a[p[i]];
+      }
+    }
+    if (t) {
+      r += "^" + (t + 1);
+    }
+    return r;
+  };
+  polys.polyexpand = polyexpand = function(a, b){
+    var p, i$, to$, i, j$, to1$, j;
+    p = new poly(a.rank + b.rank);
+    p.setrand(0);
+    for (i$ = 0, to$ = a.rank; i$ <= to$; ++i$) {
+      i = i$;
+      for (j$ = 0, to1$ = b.rank; j$ <= to1$; ++j$) {
+        j = j$;
+        p[i + j] += a[i] * b[j];
+      }
+    }
+    return p;
+  };
+  polys.p_quadratic = p_quadratic = function(a, b, c){
+    var p;
+    p = new poly(2);
+    p.set(c, b, a);
+    return p;
+  };
+  polys.p_linear = p_linear = function(a, b){
+    var p;
+    p = new poly(1);
+    p.set(b, a);
+    return p;
+  };
+  polys.p_const = p_const = function(a){
+    var p;
+    p = new poly(0);
+    p.set(a);
+    return p;
+  };
+  return polys.poly = poly = (function(){
+    poly.displayName = 'poly';
+    var prototype = poly.prototype, constructor = poly;
+    function poly(rank){
+      this.rank = rank;
+    }
+    prototype.terms = function(){
+      var n, i$, to$, i;
+      n = 0;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        if (this[i]) {
+          n++;
+        }
+      }
+      return n;
+    };
+    prototype.set = function(){
+      var i$, to$, i;
+      this.rank = this.set.arguments.length - 1;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        this[i] = this.set.arguments[i];
+      }
+      return this;
+    };
+    prototype.setrand = function(maxentry){
+      var i$, to$, i;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        this[i] = Math.round(-maxentry + 2 * maxentry * Math.random());
+        if (this[this.rank] === 0) {
+          this[this.rank] = maxentry;
+        }
+      }
+      return this;
+    };
+    prototype.compute = function(x){
+      var y, i$, to$, i;
+      y = 0;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        y += this[i] * Math.pow(x, i);
+      }
+      return y;
+    };
+    prototype.gcd = function(){
+      var a, i$, to$, i;
+      a = this[this.rank];
+      for (i$ = 0, to$ = this.rank - 1; i$ <= to$; ++i$) {
+        i = i$;
+        a = gcd(a, this[i]);
+      }
+      return a;
+    };
+    prototype.xthru = function(x){
+      var i$, to$, i;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        this[i] = this[i] * x;
+      }
+      return this;
+    };
+    prototype.addp = function(x){
+      var i$, to$, i;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        this[i] = this[i] + x[i];
+      }
+      return this;
+    };
+    prototype.diff = function(d){
+      var i$, to$, i, results$ = [];
+      d.rank = this.rank - 1;
+      for (i$ = 0, to$ = this.rank - 1; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(d[i] = this[i + 1] * (i + 1));
+      }
+      return results$;
+    };
+    prototype.integ = function(d){
+      var i$, to$, i, results$ = [];
+      d.rank = rank + 1;
+      for (i$ = 0, to$ = this.rank - 1; i$ <= to$; ++i$) {
+        i = i$;
+        results$.push(d[i + 1] = this[i] / (i + 1));
+      }
+      return results$;
+    };
+    prototype.write = function(l){
+      var q, j, i$, i;
+      l == null && (l = "x");
+      q = "";
+      j = false;
+      for (i$ = this.rank; i$ >= 0; --i$) {
+        i = i$;
+        if (this[i] < 0) {
+          if (j) {
+            q += " ";
+          }
+          q += "- ";
+          j = false;
+        } else if (j && this[i]) {
+          q += " + ";
+          j = false;
+        }
+        if (this[i]) {
+          switch (i) {
+          case 0:
+            q += Math.abs(this[i]);
+            j = true;
+            break;
+          case 1:
+            if (Math.abs(this[i]) === 1) {
+              q += l;
+            } else {
+              q += Math.abs(this[i]) + l;
+            }
+            j = true;
+            break;
+          default:
+            if (Math.abs(this[i]) === 1) {
+              q += l + "^" + i;
+            } else {
+              q += Math.abs(this[i]) + l + "^" + i;
+            }
+            j = true;
+          }
+        }
+      }
+      return q;
+    };
+    prototype.rwrite = function(l){
+      var q, j, i$, to$, i;
+      l == null && (l = "x");
+      q = "";
+      j = false;
+      for (i$ = 0, to$ = this.rank; i$ <= to$; ++i$) {
+        i = i$;
+        if (this[i] < 0) {
+          if (j) {
+            q += " ";
+          }
+          q += "- ";
+          j = false;
+        } else if (j && this[i]) {
+          q += " + ";
+          j = false;
+        }
+        if (this[i]) {
+          switch (i) {
+          case 0:
+            q += Math.abs(this[i]);
+            j = true;
+            break;
+          case 1:
+            if (Math.abs(this[i]) === 1) {
+              q += l;
+            } else {
+              q += Math.abs(this[i]) + l;
+            }
+            j = true;
+            break;
+          default:
+            if (Math.abs(this[i]) === 1) {
+              q += l + "^" + i;
+            } else {
+              q += Math.abs(this[i]) + l + "^" + i;
+            }
+            j = true;
+          }
+        }
+      }
+      return q;
+    };
+    return polys;
+    return poly;
+  }());
+};
+},{}],9:[function(require,module,exports){
 module.exports = function(problems){
   var makePartial, makeBinomial2, makePolyInt, makeTrigInt, makeVector, makeLines, makeLinesEq, makeLineParPerp, makeCircleEq, makeCircLineInter, makeIneq, makeAP, makeFactor, makeQuadratic, makeComplete, makeBinExp, makeLog, makeStationary, makeTriangle, makeCircle, makeSolvingTrig, makeVectorEq, makeModulus, makeTransformation, makeComposition, makeParametric, makeImplicit, makeChainRule, makeProductRule, makeQuotientRule, makeGP, makeImplicitFunction, makeIntegration, makeDE, makePowers, makeHCF, makeLCM, makeDiophantine, makeDistance, makeCircumCircle, makeCArithmetic, makeCPolar, makeDETwoHard, makeMatrixQ, makeMatrix2, makeMatrix3, makeTaylor, makePolarSketch, makeFurtherVector, makeNewtonRaphson, makeFurtherIneq, makeSubstInt, makeRevolution, makeMatXforms, makeDiscreteDistn, makeContinDistn, makeHypTest, makeConfidInt, makeChiSquare, makeProductMoment;
+  require('./complex')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./fpolys')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./fractions')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./geometry')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./guessExact')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./polys')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./helpers')(typeof window != 'undefined' && window !== null ? window : exports);
+  require('./stats')(typeof window != 'undefined' && window !== null ? window : exports);
   problems.makePartial = makePartial = function(){
     var makePartial1, makePartial2, qa;
     makePartial1 = function(){
@@ -3569,13 +5475,365 @@ module.exports = function(problems){
   };
   return problems;
 };
-},{}],"BisjLa":[function(require,module,exports){
-module.exports = function(qa){
-  require('./manifest')(qa);
-  qa.name = 'foo';
-  return qa;
+},{"./complex":1,"./fpolys":2,"./fractions":3,"./geometry":4,"./guessExact":5,"./helpers":6,"./polys":8,"./stats":11}],10:[function(require,module,exports){
+require('./complex')(typeof window != 'undefined' && window !== null ? window : exports);
+require('./fpolys')(typeof window != 'undefined' && window !== null ? window : exports);
+require('./fractions')(typeof window != 'undefined' && window !== null ? window : exports);
+require('./geometry')(typeof window != 'undefined' && window !== null ? window : exports);
+require('./guessExact')(typeof window != 'undefined' && window !== null ? window : exports);
+require('./polys')(typeof window != 'undefined' && window !== null ? window : exports);
+require('./helpers')(typeof window != 'undefined' && window !== null ? window : exports);
+require('./stats')(typeof window != 'undefined' && window !== null ? window : exports);
+require('./manifest')(typeof window != 'undefined' && window !== null ? window : exports);
+require('./problems')(typeof window != 'undefined' && window !== null ? window : exports);
+},{"./complex":1,"./fpolys":2,"./fractions":3,"./geometry":4,"./guessExact":5,"./helpers":6,"./manifest":7,"./polys":8,"./problems":9,"./stats":11}],11:[function(require,module,exports){
+module.exports = function(stats){
+  var facCache, factorial, combi, massBin, massPo, massGeo, massN, massNZ, massExp, genBern, genBin, genPo, genGeo, genExp, genN, genNZ, Phi_Taylor, istr, mktableT, tableT, mktableChi, tableChi, mktableN, tableN;
+  facCache = [];
+  stats.factorial = factorial = function(n){
+    var f, i;
+    if (n < 0 || n !== Math.round(n)) {
+      throw new Error("bad factorial(" + n + ")");
+    }
+    return facCache[n] || (n < 2
+      ? 1
+      : (f = 1, (function(){
+        var i$, to$, results$ = [];
+        for (i$ = 2, to$ = n; i$ <= to$; ++i$) {
+          i = i$;
+          results$.push(f = f * i);
+        }
+        return results$;
+      }()), facCache[n] = f));
+  };
+  stats.combi = combi = function(n, r){
+    return factorial(n) / (factorial(r) * factorial(n - r));
+  };
+  stats.massBin = massBin = function(x, n, p){
+    if (x !== Math.round(x) || x < 0 || x > n) {
+      return 0;
+    } else {
+      return combi(n, x) * Math.pow(p, x) * Math.pow(1 - p, n - x);
+    }
+  };
+  stats.massPo = massPo = function(x, l){
+    if (x !== Math.round(x) || x < 0) {
+      return 0;
+    } else {
+      return Math.exp(-l) * Math.pow(l, x) / factorial(x);
+    }
+  };
+  stats.massGeo = massGeo = function(x, p){
+    if (x !== Math.round(x) || x < 1) {
+      return 0;
+    } else {
+      return p * Math.pow(1 - p, x - 1);
+    }
+  };
+  stats.massN = massN = function(x, m, s){
+    return Math.exp(-Math.pow((x - m) / s, 2) / 2) / (s * Math.sqrt(2 * Math.PI));
+  };
+  stats.massNZ = massNZ = function(x){
+    return Math.exp(-Math.pow(x, 2) / 2) / Math.sqrt(2 * Math.PI);
+  };
+  stats.massExp = massExp = function(x, l){
+    return l * Math.exp(-l * x);
+  };
+  stats.genBern = genBern = function(p){
+    if (Math.random() > p) {
+      return 1;
+    } else {
+      return 0;
+    }
+  };
+  stats.genBin = genBin = function(n, p){
+    var x, i$, to$, i;
+    x = 0;
+    for (i$ = 0, to$ = n - 1; i$ <= to$; ++i$) {
+      i = i$;
+      x += genBern(p);
+    }
+    return x;
+  };
+  stats.genPo = genPo = function(l){
+    var t, k, p;
+    t = Math.exp(-l);
+    k = -1;
+    p = 1;
+    do {
+      k++;
+      p *= Math.random();
+    } while (p > t);
+    return k;
+  };
+  stats.genGeo = genGeo = function(p){
+    var l, x;
+    l = -Math.log(1 - p);
+    x = genExp(l);
+    return 1 + Math.floor(x);
+  };
+  stats.genExp = genExp = function(l){
+    return -Math.log(Math.random()) / l;
+  };
+  stats.genN = genN = function(m, s){
+    return m + s * genNZ()[0];
+  };
+  stats.genNZ = genNZ = function(){
+    var u, v, r, th, x, y;
+    u = 1 - Math.random();
+    v = 1 - Math.random();
+    r = Math.sqrt(-2 * Math.log(u));
+    th = 2 * Math.PI * v;
+    x = r * Math.cos(th);
+    y = r * Math.sin(th);
+    return [x, y];
+  };
+  stats.Phi_Taylor = Phi_Taylor = function(x){
+    return 0.5 + x * 0.398942 + Math.pow(x, 3) / 6 * -0.398942 + Math.pow(x, 5) / 120 * 1.19683 + Math.pow(x, 7) / 5040 * -5.98413 + Math.pow(x, 9) / 362880 * 41.8889;
+  };
+  istr = function(x){
+    if (x % 3 === 1) {
+      return "<strong>";
+    } else {
+      return "";
+    }
+  };
+  mktableT = (function(){
+    mktableT.displayName = 'mktableT';
+    var prototype = mktableT.prototype, constructor = mktableT;
+    function mktableT(){
+      this.p = [0.75, 0.9, 0.95, 0.975, 0.99, 0.995, 0.9975, 0.999, 0.9995];
+      this.v = ["&nu;=1", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 40, 60, 120, "&infin;"];
+      this.values = [['1.000', 3.078, 6.314, 12.71, 31.82, 63.66, 127.3, 318.3, 636.6], [0.816, 1.886, 2.920, 4.303, 6.965, 9.925, 14.09, 22.33, 31.60], [0.765, 1.638, 2.353, 3.182, 4.541, 5.841, 7.453, 10.21, 12.92], [0.741, 1.533, 2.132, 2.776, 3.747, 4.604, 5.598, 7.173, 8.610], [0.727, 1.476, 2.015, 2.571, 3.365, 4.032, 4.773, 5.894, 6.869], [0.718, 1.440, 1.943, 2.447, 3.143, 3.707, 4.317, 5.208, 5.959], [0.711, 1.415, 1.895, 2.365, 2.998, 3.499, 4.029, 4.785, 5.408], [0.706, 1.397, 1.860, 2.306, 2.896, 3.355, 3.833, 4.501, 5.041], [0.703, 1.383, 1.833, 2.262, 2.821, 3.250, 3.690, 4.297, 4.781], [0.700, 1.372, 1.812, 2.228, 2.764, 3.169, 3.581, 4.144, 4.587], [0.697, 1.363, 1.796, 2.201, 2.718, 3.106, 3.497, 4.025, 4.437], [0.695, 1.356, 1.782, 2.179, 2.681, 3.055, 3.428, 3.930, 4.318], [0.694, 1.350, 1.771, 2.160, 2.650, 3.012, 3.372, 3.852, 4.221], [0.692, 1.345, 1.761, 2.145, 2.624, 2.977, 3.326, 3.787, 4.140], [0.691, 1.341, 1.753, 2.131, 2.602, 2.947, 3.286, 3.733, 4.073], [0.690, 1.337, 1.746, 2.120, 2.583, 2.921, 3.252, 3.686, 4.015], [0.689, 1.333, 1.740, 2.110, 2.567, 2.898, 3.222, 3.646, 3.965], [0.688, 1.330, 1.734, 2.101, 2.552, 2.878, 3.197, 3.610, 3.922], [0.688, 1.328, 1.729, 2.093, 2.539, 2.861, 3.174, 3.579, 3.883], [0.687, 1.325, 1.725, 2.086, 2.528, 2.845, 3.153, 3.552, 3.850], [0.686, 1.323, 1.721, 2.080, 2.518, 2.831, 3.135, 3.527, 3.819], [0.686, 1.321, 1.717, 2.074, 2.508, 2.819, 3.119, 3.505, 3.792], [0.685, 1.319, 1.714, 2.069, 2.500, 2.807, 3.104, 3.485, 3.768], [0.685, 1.318, 1.711, 2.064, 2.492, 2.797, 3.091, 3.467, 3.745], [0.684, 1.316, 1.708, 2.060, 2.485, 2.787, 3.078, 3.450, 3.725], [0.684, 1.315, 1.706, 2.056, 2.479, 2.779, 3.067, 3.435, 3.707], [0.684, 1.314, 1.703, 2.052, 2.473, 2.771, 3.057, 3.421, 3.689], [0.683, 1.313, 1.701, 2.048, 2.467, 2.763, 3.047, 3.408, 3.674], [0.683, 1.311, 1.699, 2.045, 2.462, 2.756, 3.038, 3.396, 3.660], [0.683, 1.310, 1.697, 2.042, 2.457, 2.750, 3.030, 3.385, 3.646], [0.681, 1.303, 1.684, 2.021, 2.423, 2.704, 2.971, 3.307, 3.551], [0.679, 1.296, 1.671, '2.000', 2.390, 2.660, 2.915, 3.232, 3.460], [0.677, 1.289, 1.658, 1.980, 2.358, 2.617, 2.860, 3.160, 3.373], [0.674, 1.282, 1.645, 1.960, 2.326, 2.576, 2.807, 3.090, 3.291]];
+    }
+    prototype.writehtml = function(open, close){
+      var a, i$, i, j$, j;
+      a = "<table border=1 cellpadding=0>";
+      a += "<tr><td>" + open + "p" + close + "</td>";
+      for (i$ = 0; i$ <= 8; ++i$) {
+        i = i$;
+        a += "<td>" + open + istr(i) + this.p[i] + istr(i) + close + "</td>";
+      }
+      a += "</tr><tr><td>" + open + "<font color=\"white\">0.0-</font>" + close + "</td>";
+      for (i$ = 0; i$ <= 8; ++i$) {
+        i = i$;
+        a += "<td>" + open + "<font color=\"white\">0.0000-</font>" + close + "</td>";
+      }
+      a += "</tr>";
+      for (i$ = 1; i$ <= 34; ++i$) {
+        i = i$;
+        if (i && i % 5 === 0) {
+          a += "<tr><td></td></tr>";
+        }
+        for (j$ = 0; j$ <= 8; ++j$) {
+          j = j$;
+          a += "<td>" + open + istr(j) + this.values[i - 1][j].toString().rPad(5, "0") + istr(j) + close + "</td>";
+        }
+        a += "</tr>";
+      }
+      a += "</table>";
+      return a.replace(/&gt;/g, ">").replace(/&lt;/g, "<");
+    };
+    return mktableT;
+  }());
+  stats.tableT = tableT = new mktableT();
+  mktableChi = (function(){
+    mktableChi.displayName = 'mktableChi';
+    var prototype = mktableChi.prototype, constructor = mktableChi;
+    function mktableChi(){
+      this.p = [0.01, 0.025, 0.05, 0.9, 0.95, 0.975, 0.99, 0.995, 0.999];
+      this.v = ["&nu;=1", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 30, 40, 50, 60, 70, 80, 90, 100];
+      this.values = [['0.0&sup3;1571', '0.0&sup3;9821', '0.0&sup2;3932', 2.706, 3.841, 5.024, 6.635, 7.8794, 10.83], [0.02010, 0.05064, 0.1026, 4.605, 5.991, 7.378, 9.210, 10.60, 13.82], [0.1148, 0.2158, 0.3518, 6.251, 7.815, 9.348, 11.34, 12.84, 16.27], [0.2971, 0.4844, 0.7107, 7.779, 9.488, 11.14, 13.28, 14.86, 18.47], [0.5543, 0.8312, 1.145, 9.236, 11.07, 12.83, 15.09, 16.75, 20.51], [0.8721, 1.237, 1.635, 10.64, 12.59, 14.45, 16.81, 18.55, 22.46], [1.239, 1.690, 2.167, 12.02, 14.07, 16.01, 18.48, 20.28, 24.32], [1.647, 2.180, 2.733, 13.36, 15.51, 17.53, 20.09, 21.95, 26.12], [2.088, 2.700, 3.325, 14.68, 16.92, 19.02, 21.67, 23.59, 27.88], [2.558, 3.247, 3.940, 15.99, 18.31, 20.48, 23.21, 25.19, 29.59], [3.053, 3.816, 4.575, 17.28, 19.68, 21.92, 24.73, 26.76, 31.26], [3.571, 4.404, 5.226, 18.55, 21.03, 23.34, 26.22, 28.30, 32.91], [4.107, 5.009, 5.892, 19.81, 22.36, 24.74, 27.69, 29.82, 34.53], [4.660, 5.629, 6.571, 21.06, 23.68, 26.12, 29.14, 31.32, 36.12], [5.229, 6.262, 7.261, 22.31, '25.00', 27.49, 30.58, 32.80, 37.70], [5.812, 6.908, 7.962, 23.54, 26.30, 28.85, '32.00', 34.27, 39.25], [6.408, 7.564, 8.672, 24.77, 27.59, 30.19, 33.41, 35.72, 40.79], [7.015, 8.231, 9.390, 25.99, 28.87, 31.53, 34.81, 37.16, 42.31], [7.633, 8.907, 10.12, 27.20, 30.14, 32.85, 36.19, 38.58, 43.82], [8.260, 9.591, 10.85, 28.41, 31.41, 34.17, 37.57, '40.00', 45.31], [8.897, 10.28, 11.59, 29.62, 32.67, 35.48, 38.93, 41.40, 46.80], [9.542, 10.98, 12.34, 30.81, 33.92, 36.78, 40.29, 42.80, 48.27], [10.20, 11.69, 13.09, 32.01, 35.17, 38.08, 41.64, 44.18, 49.73], [10.86, 12.40, 13.85, 33.20, 36.42, 39.36, 42.98, 45.56, 51.18], [11.52, 13.12, 14.61, 34.38, 37.65, 40.65, 44.31, 46.93, 52.62], [14.95, 16.79, 18.49, 40.26, 43.77, 46.98, 50.89, 53.67, 59.70], [22.16, 24.43, 26.51, 51.81, 55.76, 59.34, 63.69, 66.77, 73.40], [29.71, 32.36, 34.76, 63.17, 67.50, 71.42, 76.15, 79.49, 86.66], [37.48, 40.48, 43.19, 74.40, 79.08, 83.30, 88.38, 91.95, 99.61], [45.44, 48.76, 51.74, 85.53, 90.53, 95.02, 100.4, 104.2, 112.3], [53.54, 57.15, 60.39, 96.58, 101.9, 106.6, 112.3, 116.3, 124.8], [61.75, 65.65, 69.13, 107.6, 113.1, 118.1, 124.1, 128.3, 137.2], [70.06, 74.22, 77.93, 118.5, 124.3, 129.6, 135.8, 140.2, 149.4]];
+    }
+    prototype.writehtml = function(open, close){
+      var a, i$, i, j$, j;
+      a = "<table border=1 cellpadding=0>";
+      a += "<tr><td>" + open + "p" + close + "</td><td></td>";
+      for (i$ = 0; i$ <= 8; ++i$) {
+        i = i$;
+        a += "<td>" + open + istr(i) + this.p[i] + istr(i) + close + "</td>";
+        if (i === 2) {
+          a += "<td></td>";
+        }
+      }
+      a += "</tr><tr><td>" + open + "<font color=\"white\">0.0-</font>" + close + "</td><td width=3></td>";
+      for (i$ = 0; i$ <= 8; ++i$) {
+        i = i$;
+        a += "<td>" + open + "<font color=\"white\">0.0000-</font>" + close + "</td>";
+        if (i === 2) {
+          a += "<td width=3></td>";
+        }
+      }
+      a += "</tr>";
+      for (i$ = 1; i$ <= 33; ++i$) {
+        i = i$;
+        if (i && i % 5 === 0) {
+          a += "<tr><td></td></tr>";
+        }
+        for (j$ = 0; j$ <= 8; ++j$) {
+          j = j$;
+          a += "<td>" + open + istr(j) + this.values[i - 1][j].toString().rPad(5, "0") + istr(j) + close + "</td>";
+          if (j === 2) {
+            a += "<td></td>";
+          }
+        }
+        a += "</tr>";
+      }
+      a += "</table>";
+      return a.replace(/&gt;/g, ">").replace(/&lt;/g, "<");
+    };
+    return mktableChi;
+  }());
+  stats.tableChi = tableChi = new mktableChi();
+  mktableN = (function(){
+    mktableN.displayName = 'mktableN';
+    var jstr, prototype = mktableN.prototype, constructor = mktableN;
+    function mktableN(){
+      this.values = new Array(3000);
+      this.table = new Array(300);
+      this.charac = new Array(300);
+      this.ready = false;
+    }
+    prototype.populate = function(){
+      var p, i$, i;
+      if (!this.ready) {
+        p = 0.5;
+        for (i$ = 0; i$ <= 299; ++i$) {
+          i = i$;
+          this.charac[i] = 0;
+        }
+        for (i$ = 0; i$ <= 2999; ++i$) {
+          i = i$;
+          this.values[i] = p;
+          if (i % 10 === 0) {
+            this.table[i / 10] = this.values[i];
+          } else {
+            this.charac[10 * Math.floor(i / 100) + i % 10] += this.values[i] - this.table[Math.floor(i / 10)];
+          }
+          p += 0.001 * massNZ((i + 0.5) * 0.001);
+        }
+        return this.ready = true;
+      }
+    };
+    prototype.write = function(){
+      var a, i$, i, j$, j;
+      if (!this.ready) {
+        throw new Error("Table not populated!");
+      }
+      a = "\\begin{array}{c}|&-&|&-&-&-&-&-&-&-&-&-&-&-&-&-&|&-&-&-&&-&-&-&&-&-&-&|\\\\";
+      a += "|&z&|&0&&1&2&3&&4&5&6&&7&8&9&|&1&2&3&&4&5&6&&7&8&9&|\\\\";
+      a += "|&&|&&&&&&&&&&&&&&|&&&&&A&D&D&&&&&|\\\\";
+      a += "|&-&|&-&-&-&-&-&-&-&-&-&-&-&-&-&|&-&-&-&&-&-&-&&-&-&-&|\\\\";
+      for (i$ = 0; i$ <= 29; ++i$) {
+        i = i$;
+        if (i && i % 5 === 0) {
+          a += "|&&|&&&&&&&&&&&&&&|&&&&&&&&&&&&|\\\\";
+        }
+        a += "|&" + i / 10 + "&|&";
+        for (j$ = 0; j$ <= 9; ++j$) {
+          j = j$;
+          a += (Math.round(this.table[i * 10 + j] * 1e4) / 1e4).toString().rPad(6, "0") + "&";
+          if (j % 3 === 0) {
+            a += "|&";
+          }
+        }
+        for (j$ = 1; j$ <= 9; ++j$) {
+          j = j$;
+          a += Math.round(this.charac[i * 10 + j] * 1e3) + "&";
+          if (j % 3 === 0) {
+            a += "|&";
+          }
+        }
+        a += "\\\\";
+      }
+      a += "|&-&|&-&-&-&-&-&-&-&-&-&-&-&-&-&|&-&-&-&&-&-&-&&-&-&-&|\\\\";
+      a += "\\end{array}";
+      return a;
+    };
+    jstr = function(x, n){
+      if (x % n !== 0) {
+        return "<strong>";
+      } else {
+        return "";
+      }
+    };
+    prototype.writehtml = function(open, close){
+      var a, i$, i, j$, j;
+      if (!this.ready) {
+        throw new Error("Table not populated!");
+      }
+      a = "<table border=1 cellpadding=0 cellspacing=0>";
+      a += "<tr><td>" + open + "z" + close + "</td><td width=3></td>";
+      for (i$ = 0; i$ <= 9; ++i$) {
+        i = i$;
+        a += "<td>" + jstr(i, 3) + open + i + jstr(i, 3) + close + "</td>";
+      }
+      a += "<td width=5></td>";
+      for (i$ = 1; i$ <= 9; ++i$) {
+        i = i$;
+        a += "<td>" + jstr(i, 2) + open + i + jstr(i, 2) + close + "</td>";
+      }
+      a += "</tr><tr><td>" + open + "<font color=\"white\"0.0-</font>" + close + "</td><td></td>";
+      for (i$ = 0; i$ <= 9; ++i$) {
+        i = i$;
+        a += "<td>" + open + "<font color=\"white\">0.0000-</font>" + close + "</td>";
+      }
+      a += "<td></td>";
+      for (i$ = 1; i$ <= 9; ++i$) {
+        i = i$;
+        a += "<td>" + open + "<font color=\"";
+        if (i === 5) {
+          a += "black";
+        } else {
+          a += "white";
+        }
+        a += "\">ADD</font>" + close + "</td>";
+      }
+      a += "</tr>";
+      for (i$ = 0; i$ <= 29; ++i$) {
+        i = i$;
+        if (i && i % 5 === 0) {
+          a += "<tr height=5><td></td></tr>";
+        }
+        a += "<tr><td>" + open + Math.floor(i / 10) + "." + i % 10 + close + "</td><td></td>";
+        for (j$ = 0; j$ <= 9; ++j$) {
+          j = j$;
+          if (j % 3 === 0) {
+            a += "<td>" + open + jstr(j, 3) + (Math.round(this.table[i * 10 + j] * 1e4) / 1e4).toString().rPad(6, "0") + jstr(j, 3) + close + "</td>";
+          }
+        }
+        a += "<td></td>";
+        for (j$ = 1; j$ <= 9; ++j$) {
+          j = j$;
+          a += "<td>" + open + jstr(j, 2) + Math.round(this.charac[i * 10 + j] * 1e3) + jstr(j, 2) + close + "</td>";
+        }
+        a += "</tr>";
+      }
+      a += "</table>";
+      return a.replace(/&gt;/, ">").replace(/&lt;/g, "<");
+    };
+    return mktableN;
+  }());
+  stats.tableN = tableN = new mktableN();
+  return stats;
 };
-},{"./manifest":1}],"qalib":[function(require,module,exports){
-module.exports=require('BisjLa');
-},{}]},{},["BisjLa"])
+String.prototype.lPad = function(n, c){
+  var a, i$, to$, i;
+  a = this.split("");
+  for (i$ = 0, to$ = n - this.length - 1; i$ <= to$; ++i$) {
+    i = i$;
+    a.unshift(c);
+  }
+  return a.join("");
+};
+String.prototype.rPad = function(n, c){
+  var a, i$, to$, i;
+  a = this.split("");
+  for (i$ = 0, to$ = n - this.length - 1; i$ <= to$; ++i$) {
+    i = i$;
+    a.push(c);
+  }
+  return a.join("");
+};
+},{}]},{},[10])
 ;

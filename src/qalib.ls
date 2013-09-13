@@ -1,10 +1,13 @@
-(require './complex') (window ? exports)
-(require './fpolys') (window ? exports)
-(require './fractions') (window ? exports)
-(require './geometry') (window ? exports)
-(require './guessExact') (window ? exports)
-(require './polys') (window ? exports)
-(require './helpers') (window ? exports) 
-(require './stats') (window ? exports)
-(require './manifest') (window ? exports)
-(require './problems') (window ? exports) 
+module.exports = (qa) -> 
+  # (require './complex') (qa)
+  # (require './fpolys') (qa)
+  # (require './fractions') (qa)
+  # (require './geometry') (qa)
+  # (require './guessExact') (qa)
+  # (require './polys') (qa)
+  # (require './helpers') (qa) 
+  # (require './stats') (qa)
+  # (require './problems') (qa) 
+  (require './manifest') (qa)
+  qa.name = 'foo'
+  return qa

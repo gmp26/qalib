@@ -3,16 +3,6 @@
 #
 module.exports = (problems) ->
 
-  (require './complex') (window ? exports)
-  (require './fpolys') (window ? exports)
-  (require './fractions') (window ? exports)
-  (require './geometry') (window ? exports)
-  (require './guessExact') (window ? exports)
-  (require './polys') (window ? exports)
-  (require './helpers') (window ? exports) 
-  (require './stats') (window ? exports)
-
-
   # partial fractions
   problems.makePartial = makePartial = ->
 
