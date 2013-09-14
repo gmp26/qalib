@@ -7,7 +7,7 @@ describe "helpers", (_) ->
   var helpers
 
   beforeEach ->
-    helpers := window
+    helpers := (require 'qalib') {}
     @addMatchers do
       closeTo: (expected) ->
         Math.abs(@actual - expected) < 1e-6

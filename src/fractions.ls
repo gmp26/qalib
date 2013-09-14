@@ -7,9 +7,22 @@
 # * write in LaTeX
 # * assignment
 # * equality check
-module.exports = (frac) ->
+module.exports = (fractions) ->
 
-  frac.frac = class frac
+  fractions.fractionsLoaded = true
+
+  unless fractions.helpersLoaded
+    helpers = (require './helpers') fractions
+  else
+    helpers = fractions
+  gcd = helpers.gcd
+  lcm = helpers.lcm
+
+  stats = (require './stats') fractions
+  rand = stats.rand
+  randnz = stats.randnz
+
+  fractions.frac = class frac
     (top, bot) ->
       if typeof top is "undefined" then @top = 0 else @top = top
       if typeof bot is "undefined" then @bot = 1 else @bot = bot
@@ -60,7 +73,7 @@ module.exports = (frac) ->
 
 
   # makes a number into a fraction, leaves a fraction unchanged
-  frac.toFrac = toFrac = (n) ->
+  fractions.toFrac = toFrac = (n) ->
     if typeof n is "number"
       return new frac(n, 1)
     else if n instanceof frac
@@ -71,7 +84,7 @@ module.exports = (frac) ->
 
 
   # returns a random fraction
-  frac.randfrac = randfrac = (max) ->
+  fractions.randfrac = randfrac = (max) ->
     f = new frac(rand(max), randnz(max))
     f.reduce()
     return f
@@ -79,7 +92,7 @@ module.exports = (frac) ->
 
 
   # square matrix object over Q
-  frac.fmatrix = class fmatrix
+  fractions.fmatrix = class fmatrix
     (dim) ->
       @dim = dim
 
@@ -276,4 +289,4 @@ module.exports = (frac) ->
             res += "&"
 
       return res
-  return frac
+  return fractions

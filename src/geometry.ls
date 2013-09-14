@@ -4,6 +4,10 @@
 
 module.exports = (ceq) -> 
 
+  helpers = (require './helpers') ceq
+  gcd = helpers.gcd
+  signedNumber = helpers.signedNumber
+
   # Equations of the form
   # (x-a)^2 + (y-b)^2 = r^2
   ceq.circleEq1 = circleEq1 = (a,b,r) ->

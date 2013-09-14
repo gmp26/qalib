@@ -7,6 +7,16 @@
 # * write it in LaTeX
 module.exports = (cplex) ->
 
+  stats = (require './stats') cplex
+  rand = stats.rand
+
+  gx = (require './guessExact') cplex
+  guessExact = gx.guessExact
+
+  helpers = (require './helpers') cplex
+  ascoeff = helpers.ascoeff
+
+
   cplex.complex = class complex
     (Re, Im) ->
       @Re = Re

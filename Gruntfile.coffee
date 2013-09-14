@@ -21,13 +21,27 @@ module.exports = (grunt) ->
         ]
 
     browserify:
+      # random:
+      #   options:
+      #     alias: './src/seedrandom.js:seedrandom'
+      #   files:
+      #     './lib/seedramdom.js': './src/seedrandom.js'
       dist:
         options:
-          alias: './tmp/qalib.js:qalib'
-        files:
+          alias: [
+            './src/seedrandom.js:seedrandom'
+            './tmp/qalib.js:qalib'
+          ]
+        files: [
+          './lib/seedramdom.js': './src/seedrandom.js'
           './dist/qalib.js': './tmp/qalib.js'
-        # src: './tmp/qalib.js'
-        # dest: './dist/qalib.js'
+        ]
+
+
+    watch:
+      changes:
+        files: ['src/*.ls']
+        tasks: ['lsc', 'browserify','jasmine']
 
     jasmine:
       src: 'dist/*.js'
@@ -39,7 +53,8 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-lsc')
   grunt.loadNpmTasks('grunt-contrib-jasmine')
   grunt.loadNpmTasks('grunt-browserify')
+  grunt.loadNpmTasks('grunt-contrib-watch')
 
   # Default task(s).
-  grunt.registerTask('default', ['lsc', 'browserify', 'jasmine'])
+  grunt.registerTask('default', ['lsc', 'browserify', 'jasmine', 'watch'])
 

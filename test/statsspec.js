@@ -1,10 +1,9 @@
 'use strict';
 describe("stats", function(_){
   var stats, helpers;
-  beforeEach(function(){
-    stats = window;
-    return helpers = window;
-  });
+  stats = require('qalib')({});
+  helpers = require('qalib')({});
+  beforeEach(function(){});
   describe("factorial", function(_){
     it("should exist", function(){
       return expect(stats.factorial != null).toBe(true);

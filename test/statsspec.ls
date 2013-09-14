@@ -4,12 +4,10 @@
 
 describe "stats", (_) ->
 
-  var stats
-  var helpers
+  stats = (require 'qalib') {}
+  helpers = (require 'qalib') {}
 
   beforeEach ->
-    stats := window
-    helpers := window
 
 
   describe "factorial", (_) ->

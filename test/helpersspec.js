@@ -2,7 +2,7 @@
 describe("helpers", function(_){
   var helpers;
   beforeEach(function(){
-    helpers = window;
+    helpers = require('qalib')({});
     return this.addMatchers({
       closeTo: function(expected){
         return Math.abs(this.actual - expected) < 1e-6;

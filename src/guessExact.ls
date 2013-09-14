@@ -12,6 +12,10 @@
 
 module.exports = (gx) ->
 
+  helpers = (require './helpers') gx
+  gcd = helpers.gcd
+  sqroot = helpers.sqroot
+
   /*
   guessExact = (x) ->
     n = proxInt(x)

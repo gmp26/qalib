@@ -4,6 +4,14 @@
 
 module.exports = (helpers) ->
 
+  helpers.helpersLoaded = true
+
+  unless helpers.fractionsLoaded
+    fractions = (require './fractions') helpers
+  else
+    fractions = helpers
+  frac = fractions.frac
+
   # gcd of any list of integers
   helpers.gcd = gcd = ->
     a = Math.abs gcd.arguments.0

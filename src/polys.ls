@@ -3,6 +3,12 @@
 #
 module.exports = (polys) ->
 
+  stats = (require './stats') polys
+  ranking = stats.ranking
+
+  helpers = (require './helpers') polys
+  gcd = helpers.gcd
+
   # Write a number as a coefficient (1 disappears, -1 becomes -)
   polys.ascoeff = ascoeff = (a) ->
     if a is 1 then ""
@@ -204,7 +210,7 @@ module.exports = (polys) ->
               j = true
 
       return q
-    return polys
+  return polys
 
     # gerwrite: (l = "x") ->
     #   q = ""

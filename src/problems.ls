@@ -3,6 +3,68 @@
 #
 module.exports = (problems) ->
 
+  polys = (require './polys') problems
+  poly = polys.poly
+  polyexpand = polys.polyexpand
+  abscoeff = polys.abscoeff
+  ascoeff = polys.ascoeff
+  p_linear = polys.p_linear
+  p_quadratic = polys.p_quadratic
+
+  fpolys = (require './fpolys') problems
+  fpoly = fpolys.fpoly
+  fcoeff = fpolys.fcoeff
+  fbcoeff = fpolys.fbcoeff
+
+  geometry = (require './geometry') problems
+  lineEq1 = geometry.lineEq1
+  lineEq2 = geometry.lineEq2
+  circleEq1 = geometry.circleEq1
+  circleEq2 = geometry.circleEq2
+
+  stats = (require './stats') problems
+  rand = stats.rand
+  randnz = stats.randnz
+  distrandnz = stats.distrandnz
+  ranking = stats.ranking
+  pickrand = stats.pickrand
+  distrand = stats.distrand
+  massBin = stats.massBin
+  massPo = stats.massPo
+  massPo = stats.massPo
+  massGeo = stats.massGeo
+  massN = stats.massN
+  tableN = stats.tableN
+  tableT = stats.tableT
+  tableChi = stats.tableChi
+  genN = stats.genN
+  genBin = stats.genBin
+  genGeo = stats.genGeo
+  genPo = stats.genPo
+
+  helpers = (require './helpers') problems
+  express = helpers.express
+  gcd = helpers.gcd
+  lcm = helpers.lcm
+  sinpi = helpers.sinpi
+  vector = helpers.vector
+  sqroot = helpers.sqroot
+  ordt = helpers.ordt
+  simplifySurd = helpers.simplifySurd
+  lincombination = helpers.lincombination
+  signedNumber = helpers.signedNumber
+
+  fractions = (require './fractions') problems
+  frac = fractions.frac
+  fmatrix = fractions.fmatrix
+  randfrac = fractions.randfrac
+
+  cplex = (require './complex') problems
+  Complex = cplex.Complex
+
+  gx = (require './guessExact') problems
+  guessExact = gx.guessExact
+
   # partial fractions
   problems.makePartial = makePartial = ->
 
@@ -258,7 +320,6 @@ module.exports = (problems) ->
 
     qa = [qString, aString]
     return qa
-
 
 
   # Vectors

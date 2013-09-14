@@ -4,6 +4,10 @@
 
 module.exports = (fpolys) ->
 
+  fractions = (require './fractions') fpolys
+  frac = fractions.frac
+  toFrac = fractions.toFrac
+
   # write a fractional coefficient
   fpolys.fcoeff = fcoeff = (f,t) ->
     if f.top is f.bot

@@ -1,13 +1,13 @@
-module.exports = (qa) -> 
-  # (require './complex') (qa)
-  # (require './fpolys') (qa)
-  # (require './fractions') (qa)
-  # (require './geometry') (qa)
-  # (require './guessExact') (qa)
-  # (require './polys') (qa)
-  # (require './helpers') (qa) 
-  # (require './stats') (qa)
-  # (require './problems') (qa) 
-  (require './manifest') (qa)
-  qa.name = 'foo'
-  return qa
+module.exports = (qalib) ->
+  require 'seedrandom'
+  # (require './complex') (qalib)
+  # (require './fpolys') (qalib)
+  # (require './fractions') (qalib)
+  # (require './geometry') (qalib)
+  # (require './guessExact') (qalib)
+  # (require './polys') (qalib)
+  (require './helpers') (qalib) 
+  # (require './stats') (qalib)
+  # (require './problems') (qalib) 
+  (require './manifest') (qalib)
+  return qalib
