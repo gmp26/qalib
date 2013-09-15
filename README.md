@@ -3,15 +3,15 @@ qalib
 
 A commonjs library which generates sixth-form (K12) mathematical fluency exercise questions with answers. The output is in HTML/MathJAX.
 
-This is the library that generates questions and answers, now extracted from mathmo in the [Apps1](https://github.com/gmp26/Apps1). The original had a large number of global variables. These have been eliminated and the library has been converted to the CommonJS standard to handle dependencies between its components. We've used browserify to package it so it will now work in the browser or in a nodeJS environment.
+This is the library that generates questions and answers, extracted from mathmo in [Apps1](https://github.com/gmp26/Apps1). The original had a large number of global variables which have been eliminated and the library has been converted to the CommonJS standard to handle dependencies between its components using browserify. It will now work in the browser or in a nodeJS environment.
 
 Installation
 ------------
 For browser use, include [dist/qalib.js](https://github.com/gmp26/dist/qalib.js).
 
-For node, add `dist/qalib.js` to your project and then require it with
+For node, add `dist/qalib.js` to your project and then require it.
 ```javascript
-  var qalib = require('qalib')({});
+  var qalib = require('<path_to>/qalib.js')({});
   ...
 ```
 
@@ -27,7 +27,7 @@ See the [examples](https://github.com/gmp26/examples) folder.
   // This just corresponds to the seed used in unit tests.
   var seed = "unit-test/C38/1";
 
-  // qalib includes seedrandom fore repeatable questions
+  // qalib includes seedrandom for repeatable questions
   Math.seedrandom(seed);
   maker = qalib.topicMakerById('C38');
 
