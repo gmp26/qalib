@@ -1,0 +1,28 @@
+<html>
+<head>
+  <title>qalib example</title>
+</head>
+<body>
+<p>To render the LaTeX after questions and answers have been
+  generated we recommend using MathJAX. See 
+  <a href="http://docs.mathjax.org/en/latest/dynamic.html">Loading MathJAX dynamically</a>.
+</p>
+<script src="../dist/qalib.js" type="text/javascript"></script>
+<script>
+  var qalib = require('qalib')({});
+
+  // Initialise the seed - anything will do 
+  var seed = "unit-test/C38/1";
+
+  // qalib includes seedrandom fore repeatable questions
+  Math.seedrandom(seed);
+  maker = qalib.topicMakerById('C38');
+
+  for(var i = 1; i < 4; i++) {
+    qa = maker();
+    alert("question " + i + " = "+qa[0]);
+    alert("answer " + i + " = " + qa[1]);
+  }
+</script>
+</body>
+</html>

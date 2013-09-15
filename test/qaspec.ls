@@ -332,14 +332,14 @@ describe "qalib", ->
     name = "unit-test"
 
     # some questions may have 2 or 3 part ids
-    parts = topicId.split \:
-    if parts.length == 2
-      [topicId, qNo] = parts
-      qNo = +qNo
-    else
-      if parts.length == 3
-        [topicId, qNo, name] = parts
-        qNo = +qNo
+    # parts = topicId.split \:
+    # if parts.length == 2
+    #   [topicId, qNo] = parts
+    #   qNo = +qNo
+    # else
+    #   if parts.length == 3
+    #     [topicId, qNo, name] = parts
+    #     qNo = +qNo
 
     seed = name+'/'+topicId+'/'+qNo
 
