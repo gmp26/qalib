@@ -10,6 +10,9 @@ Installation
 For browser use, include [dist/qalib.js](https://github.com/gmp26/dist/qalib.js).
 
 For node, add `dist/qalib.js` to your project and then require it.
+
+Use in a NodeJS project
+-----------------------
 ```javascript
   var qalib = require('<path_to>/qalib.js')({});
   ...
