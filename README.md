@@ -1,7 +1,7 @@
 qalib
 =====
 
-A commonjs library which generates sixth-form (K12) mathematical fluency exercise questions with answers. The output is in HTML/MathJAX.
+A commonjs library which generates sixth-form (grade 12) mathematical fluency exercise questions with answers. The output is in HTML/MathJAX.
 
 This is the library that generates questions and answers, extracted from mathmo in [Apps1](https://github.com/gmp26/Apps1). The original had a large number of global variables which have been eliminated and the library has been converted to the CommonJS standard to handle dependencies between its components using browserify. It will now work in the browser or in a nodeJS environment.
 
