@@ -21,11 +21,6 @@ module.exports = (grunt) ->
         ]
 
     browserify:
-      # random:
-      #   options:
-      #     alias: './src/seedrandom.js:seedrandom'
-      #   files:
-      #     './lib/seedramdom.js': './src/seedrandom.js'
       dist:
         options:
           alias: [

@@ -5,7 +5,7 @@ qalib = {}
 (require 'seedrandom')
 (require 'qalib') qalib
 
-console.log "qalib.topicMakerById = #{qalib.topicMakerById}"
+# console.log "qalib.topicMakerById = #{qalib.topicMakerById}"
 
 describe "qalib", ->
 
@@ -331,7 +331,7 @@ describe "qalib", ->
 
     name = "unit-test"
 
-    some questions may have 2 or 3 part ids
+    # some questions may have 2 or 3 part ids
     parts = topicId.split \:
     if parts.length == 2
       [topicId, qNo] = parts
