@@ -1472,25 +1472,60 @@ module.exports = (problems) ->
 
     qString = "Let \\(f(x) = " + fnn[which[0]].replace(/z/g, 'x') + ", g(x) = " + fnn[which[1]].replace(/z/g, 'x') + ".\\) Sketch the graph of \\(y = f(g(x))\\) (where it exists) for \\(" + l + "\\leq{x}\\leq" + r + "\\) and \\(-12\\leq{y}\\leq12.\\)"
 
+    # generate graph points
     drawIt = (parms) ->
-      f = parms[0]; g = parms[1]; p = parms[2]; l = parms[3]; r = parms[4]
-      d1 = []
-      n = 0
-
-      for i from l to r by 0.01
-        n++
-
-        if g then y2 = g(i) else y2 = p.compute(i)
+      # calculate a point
+      calcpoint = (x, g, p, f) ->
+        if g then y2 = g(x) else y2 = p.compute(x)
 
         if y2
           if f then y3 = f(y2) else y3 = p.compute(y2)
         else
           y3 = null
 
-        if Math.abs(y3) > 12
-          y3 = null
+        return y3
 
-        d1.push([i, y3])
+      # calculate graph points
+      f = parms[0]; g = parms[1]; p = parms[2]; l = parms[3]; r = parms[4]
+      d1 = []
+      n = 0
+      inc = 0.01   # increment by which to increase x
+      l = l - inc  # start with l one less than min bound so we can interpolate curve if needed
+      yprev = null # store previous y value so that we can identify asymptotes
+      ylimit = 12  # limit y axis
+
+      # increase x from lower to upper bounds with step size of increment
+      for i from l to r by inc
+        y = calcpoint(i, g, p, f)
+
+        if Math.abs(y) > ylimit
+          y = null
+
+        # interpolate to y bounds
+        if n > 0 # n == 0 is initial reference plot outside x bounds
+          if (yprev === null and y !== null) or (yprev !== null and y === null)
+            ylimitsigned = ylimit
+            if y < 0 then ylimitsigned = -ylimit
+
+            if yprev === null # from asymptote to real number
+              yi = calcpoint(i + inc, g, p, f)
+              gradient = (yi - y) / inc
+              iylimit = (y - ylimitsigned) / gradient
+            else # from real number to asymptote
+              yi = calcpoint(i - (2 * inc), g, p, f)
+              gradient = (yprev - yi) / inc
+              iylimit = (ylimitsigned - yprev) / gradient
+
+            ii = i + iylimit
+
+            # store interpolated position if it is within x bounds
+            if l <= ii <= r then d1.push([ii, ylimitsigned])
+
+        yprev = y # remember current y value
+
+        if n > 0 then d1.push([i, y]) # don't store first point as this is below x-bound
+        
+        n++
         if n > 2500 then i = r # prevent infiniloops
 
       #$.plot($("#graph"), [d1])
