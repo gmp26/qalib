@@ -1498,13 +1498,14 @@ module.exports = (problems) ->
           # interpolate to y bounds
           if (yprev === null and y !== null) or (yprev !== null and y === null)
             ylimitsigned = ylimit
-            if y < 0 then ylimitsigned = -ylimit
 
             if yprev === null # from asymptote to real number
+              if y < 0 then ylimitsigned = -ylimit
               yi = calcpoint(i + inc)
               gradient = calcgradient(y, yi, inc)
               iylimit = (y - ylimitsigned) / gradient
             else # from real number to asymptote
+              if yprev < 0 then ylimitsigned = -ylimit
               yi = calcpoint(i - (2 * inc))
               gradient = calcgradient(yi, yprev, inc)
               iylimit = (ylimitsigned - yprev) / gradient

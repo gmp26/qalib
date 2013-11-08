@@ -3925,14 +3925,17 @@ module.exports = function(problems){
           }
           if ((deepEq$(yprev, null, '===') && !deepEq$(y, null, '===')) || (!deepEq$(yprev, null, '===') && deepEq$(y, null, '==='))) {
             ylimitsigned = ylimit;
-            if (y < 0) {
-              ylimitsigned = -ylimit;
-            }
             if (deepEq$(yprev, null, '===')) {
+              if (y < 0) {
+                ylimitsigned = -ylimit;
+              }
               yi = calcpoint(i + inc);
               gradient = calcgradient(y, yi, inc);
               iylimit = (y - ylimitsigned) / gradient;
             } else {
+              if (yprev < 0) {
+                ylimitsigned = -ylimit;
+              }
               yi = calcpoint(i - 2 * inc);
               gradient = calcgradient(yi, yprev, inc);
               iylimit = (ylimitsigned - yprev) / gradient;
