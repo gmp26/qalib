@@ -1474,8 +1474,68 @@ module.exports = (problems) ->
 
     # generate graph points
     drawIt = (parms) ->
+      # initialise vars
+      f = parms[0]; g = parms[1]; p = parms[2]; l = parms[3]; r = parms[4]
+      incinit = 0.01     # initial increment by which to increase x
+      incmin = incinit / 1024 # minimum allowed increment value; 1024 gives depth 10 in adaptive sampling
+      ylimit = 12  # limit y axis
+
+      # calculate series of points
+      # call recursively based on angle between three adjacent points - provides adaptive sampling
+      calcpoints = (l, r, inc) ->
+        points = [] # to store the co-ordinates of all points generated
+        angles = [null] # to store atan calculations of adjacent point triples
+        n = 0
+        yprev = calcpoint(l - inc) # store previous y value so that we can identify asymptotes
+
+        # increase x from lower to upper bounds with step size of increment
+        for i from l to r by inc
+          y = calcpoint(i)
+
+          if Math.abs(y) > ylimit
+            y = null
+
+          # interpolate to y bounds
+          if (yprev === null and y !== null) or (yprev !== null and y === null)
+            ylimitsigned = ylimit
+            if y < 0 then ylimitsigned = -ylimit
+
+            if yprev === null # from asymptote to real number
+              yi = calcpoint(i + inc)
+              gradient = calcgradient(y, yi, inc)
+              iylimit = (y - ylimitsigned) / gradient
+            else # from real number to asymptote
+              yi = calcpoint(i - (2 * inc))
+              gradient = calcgradient(yi, yprev, inc)
+              iylimit = (ylimitsigned - yprev) / gradient
+
+            ii = i + iylimit
+
+            # store interpolated position if it is within x bounds
+            if l <= ii <= r
+              n++
+              points.push([ii, ylimitsigned])
+
+          yprev = y # remember current y value
+
+          n++
+          points.push([i, y])
+
+          # adaptive sampling over last three points
+          if n > 2
+            angle = calcangle(points[n-3], points[n-2], points[n-1])
+            if angle !== null && Math.abs(angle) < 1 && inc >= incmin # ~60 degree angle limit
+              subpoints = calcpoints(points[n-3][0], points[n-1][0], inc / 2)
+              points.splice(-3, 3) # remove last three points
+              points = points.concat(subpoints) # concat points arrays
+              n = n - 3 + subpoints.length # update pointer
+
+          if n > 10000 then i = r # prevent infiniloops
+
+        return points
+
       # calculate a point
-      calcpoint = (x, g, p, f) ->
+      calcpoint = (x) ->
         if g then y2 = g(x) else y2 = p.compute(x)
 
         if y2
@@ -1485,48 +1545,21 @@ module.exports = (problems) ->
 
         return y3
 
-      # calculate graph points
-      f = parms[0]; g = parms[1]; p = parms[2]; l = parms[3]; r = parms[4]
-      d1 = []
-      n = 0
-      inc = 0.01   # increment by which to increase x
-      l = l - inc  # start with l one less than min bound so we can interpolate curve if needed
-      yprev = null # store previous y value so that we can identify asymptotes
-      ylimit = 12  # limit y axis
+      # calculate a gradient
+      calcgradient = (y1, y2, dx) ->
+        return (y2 - y1) / dx
 
-      # increase x from lower to upper bounds with step size of increment
-      for i from l to r by inc
-        y = calcpoint(i, g, p, f)
+      # calculate angle between three adjacent points
+      # We can assume x co-ordinate always increases and is not null
+      calcangle = (p1, p2, p3) ->
+        # check for null values - we can't use these
+        if p1[1] === null or p2[1] === null or p3[1] === null then return null
 
-        if Math.abs(y) > ylimit
-          y = null
+        # calculate the angle
+        return Math.atan2(p1[1] - p2[1], p1[0] - p2[0]) - Math.atan2(p3[1] - p2[1], p3[0] - p2[0])
 
-        # interpolate to y bounds
-        if n > 0 # n == 0 is initial reference plot outside x bounds
-          if (yprev === null and y !== null) or (yprev !== null and y === null)
-            ylimitsigned = ylimit
-            if y < 0 then ylimitsigned = -ylimit
-
-            if yprev === null # from asymptote to real number
-              yi = calcpoint(i + inc, g, p, f)
-              gradient = (yi - y) / inc
-              iylimit = (y - ylimitsigned) / gradient
-            else # from real number to asymptote
-              yi = calcpoint(i - (2 * inc), g, p, f)
-              gradient = (yprev - yi) / inc
-              iylimit = (ylimitsigned - yprev) / gradient
-
-            ii = i + iylimit
-
-            # store interpolated position if it is within x bounds
-            if l <= ii <= r then d1.push([ii, ylimitsigned])
-
-        yprev = y # remember current y value
-
-        if n > 0 then d1.push([i, y]) # don't store first point as this is below x-bound
-        
-        n++
-        if n > 2500 then i = r # prevent infiniloops
+      # generate graph points
+      d1 = calcpoints(l, r, incinit)
 
       #$.plot($("#graph"), [d1])
       return [d1]
