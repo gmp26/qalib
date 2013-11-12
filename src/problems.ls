@@ -1619,6 +1619,10 @@ module.exports = (problems) ->
     fn = 0
     data = ""
 
+    xlimit = 12
+    ylimit = 12
+    inc = 0.01
+
     qString = "Sketch the curve in the \\(xy\\) plane given by \\(x = " + fnn[which[0]].replace(/z/g, 't') + ", y = " + fnn[which[1]].replace(/z/g, 't') + ". t\\) is a real parameter which ranges from \\("
 
     if which[0] and which[1]
@@ -1632,12 +1636,70 @@ module.exports = (problems) ->
       f = parms[0]; g = parms[1]; p = parms[2]; l = parms[3]
       d1 = []
 
-      for i from l to 10 by 0.01
-        if f then x = f(i) else x = p.compute(i)
-        if Math.abs(x) > 12 then x = null
+      calcpointx = (t) ->
+        if f then x = f(t) else x = p.compute(t)
+        if Math.abs(x) > xlimit then x = null
+        return x
 
-        if g then y = g(i) else y = p.compute(i)
-        if Math.abs(y) > 12 then y = null
+      calcpointy = (t) ->
+        if g then y = g(t) else y = p.compute(t)
+        if Math.abs(y) > ylimit then y = null
+        return y
+
+      xprev = calcpointx(l - inc)
+      yprev = calcpointy(l - inc)
+
+      for i from l to 10 by 0.01
+        x = calcpointx(i)
+        y = calcpointy(i)
+
+        # handle asymptotes - this is fairly hideous :|
+        if x !== null && xprev !== null
+          if (yprev === null && y !== null) || (yprev !== null && y === null)
+            ylimitsigned = ylimit
+
+            if yprev === null
+              if y < 0 then ylimitsigned = -ylimit
+              yi = calcpointy(i+inc)
+              xi = calcpointx(i+inc)
+              gradient = (yi - y) / (xi - x)
+              dx = (y - ylimitsigned) / gradient
+            else
+              if yprev < 0 then ylimitsigned = -ylimit
+              yi = calcpointy(i-(inc*2))
+              xi = calcpointx(i-(inc*2))
+              gradient = (yprev - yi) / (xprev - xi)
+              dx = (ylimitsigned - yprev) / gradient
+
+            xi = x + dx
+
+            if Math.abs(xi) <= xlimit
+              d1.push([xi, ylimitsigned])
+
+        if y !== null && yprev !== null
+          if (xprev === null && x !== null) || (xprev !== null && x === null)
+            xlimitsigned = xlimit
+
+            if xprev === null
+              if x < 0 then xlimitsigned = -xlimit
+              yi = calcpointy(i+inc)
+              xi = calcpointx(i+inc)
+              gradient = (xi - x) / (yi - y)
+              dy = (x - xlimitsigned) / gradient
+            else
+              if xprev < 0 then xlimitsigned = -xlimit
+              yi = calcpointy(i-(inc*2))
+              xi = calcpointx(i-(inc*2))
+              gradient = (xprev - xi) / (yprev - yi)
+              dy = (xlimitsigned - xprev) / gradient
+
+            yi = y + dy
+
+            if Math.abs(yi) <= ylimit
+              d1.push([xlimitsigned, yi])
+
+        xprev = x
+        yprev = y
 
         if x and y then d1.push([x, y]) else d1.push([null, null])
 
