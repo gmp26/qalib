@@ -65,6 +65,54 @@ module.exports = (problems) ->
   gx = (require './guessExact') problems
   guessExact = gx.guessExact
 
+  # interpolate curve to y axis boundary
+  # x, y are current x, y co-ordinates
+  # yprev is the y co-ordinate of the point before the current point
+  # ylimit is the y axis boundary limit
+  # inc is the x axis increment amount
+  # calcy is a function to calculate y for a given x
+  # l and r are left and right x co-ordinate bounds for the plot
+  # points is an array of consecutive points to plot
+  # returns true if an interpolated point is added, false otherwise
+  yinterpolate = (x, y, yprev, ylimit, inc, calcy, l, r, points) ->
+    if (yprev === null and y !== null) or (yprev !== null and y === null)
+      ylimitsigned = ylimit
+
+      if yprev === null # from asymptote to real number
+        if y < 0 then ylimitsigned = -ylimit
+        yi = calcy(x + inc)
+        gradient = calcgradient(y, yi, inc)
+        xylimit = (y - ylimitsigned) / gradient
+      else # from real number to asymptote
+        if yprev < 0 then ylimitsigned = -ylimit
+        yi = calcy(x - (2 * inc))
+        gradient = calcgradient(yi, yprev, inc)
+        xylimit = (ylimitsigned - yprev) / gradient
+
+      # calculate x co-ordinate at which y axis hits it's boundary
+      xi = x + xylimit
+
+      # store interpolated position if it is within x bounds
+      if l <= xi <= r
+        points.push([xi, ylimitsigned])
+        return true
+
+    return false
+
+  # calculate a gradient
+  calcgradient = (y1, y2, dx) ->
+    return (y2 - y1) / dx
+
+  # calculate angle between three adjacent points
+  # We can assume x co-ordinate always increases and is not null
+  calcangle = (p1, p2, p3) ->
+    # check for null y values - we can't use these
+    if p1[1] === null or p2[1] === null or p3[1] === null then return null
+
+    # calculate the angle
+    return Math.atan2(p1[1] - p2[1], p1[0] - p2[0]) - Math.atan2(p3[1] - p2[1], p3[0] - p2[0])
+
+
   # partial fractions
   problems.makePartial = makePartial = ->
 
@@ -1430,19 +1478,36 @@ module.exports = (problems) ->
     drawIt = (parms) ->
       p = parms[0]; q = parms[1]; f = parms[2]; l = parms[3]; r = parms[4]
       d1 = []; d2 = []
+      ylimit = 20
+      inc = 0.01
       n = 0
 
-      for i from l to r by 0.01
-        n++
-        y1 = f(i)
+      calcpoint1 = (x) ->
+        y1 = f(x)
+        if Math.abs(y1) > ylimit then y1 = null
+        return y1
 
-        if Math.abs(y1) > 20 then y1 = null
+      calcpoint2 = (x) ->
+        y2 = p.compute(f(q.compute(x)))
+        if Math.abs(y2) > ylimit then y2 = null
+        return y2
+
+      # calculate initial yprev values for interpolation calculations
+      yprev1 = calcpoint1(l - inc)
+      yprev2 = calcpoint2(l - inc)
+
+      for i from l to r by inc
+        y1 = calcpoint1(i)
+        yinterpolate(i, y1, yprev1, ylimit, inc, calcpoint1, l, r, d1)
         d1.push([i, y1])
+        yprev1 = y1
 
-        y2 = p.compute(f(q.compute(i)))
-        if Math.abs(y2) > 20 then y2 = null
-
+        y2 = calcpoint2(i)
+        yinterpolate(i, y2, yprev2, ylimit, inc, calcpoint2, l, r, d2)
         d2.push([i, y2])
+        yprev2 = y2
+
+        n++
         if n > 2500 then i = r # prevent infiniloops
 
       #$.plot($("#graph"), [d1, d2])
@@ -1496,26 +1561,7 @@ module.exports = (problems) ->
             y = null
 
           # interpolate to y bounds
-          if (yprev === null and y !== null) or (yprev !== null and y === null)
-            ylimitsigned = ylimit
-
-            if yprev === null # from asymptote to real number
-              if y < 0 then ylimitsigned = -ylimit
-              yi = calcpoint(i + inc)
-              gradient = calcgradient(y, yi, inc)
-              iylimit = (y - ylimitsigned) / gradient
-            else # from real number to asymptote
-              if yprev < 0 then ylimitsigned = -ylimit
-              yi = calcpoint(i - (2 * inc))
-              gradient = calcgradient(yi, yprev, inc)
-              iylimit = (ylimitsigned - yprev) / gradient
-
-            ii = i + iylimit
-
-            # store interpolated position if it is within x bounds
-            if l <= ii <= r
-              n++
-              points.push([ii, ylimitsigned])
+          if yinterpolate(i, y, yprev, ylimit, inc, calcpoint, l, r, points) then n++
 
           yprev = y # remember current y value
 
@@ -1546,19 +1592,6 @@ module.exports = (problems) ->
           y3 = null
 
         return y3
-
-      # calculate a gradient
-      calcgradient = (y1, y2, dx) ->
-        return (y2 - y1) / dx
-
-      # calculate angle between three adjacent points
-      # We can assume x co-ordinate always increases and is not null
-      calcangle = (p1, p2, p3) ->
-        # check for null values - we can't use these
-        if p1[1] === null or p2[1] === null or p3[1] === null then return null
-
-        # calculate the angle
-        return Math.atan2(p1[1] - p2[1], p1[0] - p2[0]) - Math.atan2(p3[1] - p2[1], p3[0] - p2[0])
 
       # generate graph points
       d1 = calcpoints(l, r, incinit)
