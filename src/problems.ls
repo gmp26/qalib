@@ -2064,7 +2064,7 @@ module.exports = (problems) ->
       drawIt = (parms) ->
         d1 = []
 
-        for i from -1 to 1 by 0.005
+        for i from -2 to 2 by 0.005 # -1 to 1 would be ideal range, but this creates a gap in the drawn ellipse due to rounding errors
           x = parms[0] * Math.cos(i * Math.PI)
           y = parms[1] * Math.sin(i * Math.PI)
           d1.push([x, y])
