@@ -1533,13 +1533,14 @@ module.exports = (problems) ->
 
           if n > 10000 then i = r # prevent infiniloops
 
+        # return generated plot co-ordinates
         return points
 
       # calculate a point
       calcpoint = (x) ->
         if g then y2 = g(x) else y2 = p.compute(x)
 
-        if y2
+        if typeof y2 == 'number'
           if f then y3 = f(y2) else y3 = p.compute(y2)
         else
           y3 = null
