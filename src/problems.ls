@@ -65,6 +65,54 @@ module.exports = (problems) ->
   gx = (require './guessExact') problems
   guessExact = gx.guessExact
 
+  # interpolate curve to y axis boundary
+  # x, y are current x, y co-ordinates
+  # yprev is the y co-ordinate of the point before the current point
+  # ylimit is the y axis boundary limit
+  # inc is the x axis increment amount
+  # calcy is a function to calculate y for a given x
+  # l and r are left and right x co-ordinate bounds for the plot
+  # points is an array of consecutive points to plot
+  # returns true if an interpolated point is added, false otherwise
+  yinterpolate = (x, y, yprev, ylimit, inc, calcy, l, r, points) ->
+    if (yprev === null and y !== null) or (yprev !== null and y === null)
+      ylimitsigned = ylimit
+
+      if yprev === null # from asymptote to real number
+        if y < 0 then ylimitsigned = -ylimit
+        yi = calcy(x + inc)
+        gradient = calcgradient(y, yi, inc)
+        xylimit = (y - ylimitsigned) / gradient
+      else # from real number to asymptote
+        if yprev < 0 then ylimitsigned = -ylimit
+        yi = calcy(x - (2 * inc))
+        gradient = calcgradient(yi, yprev, inc)
+        xylimit = (ylimitsigned - yprev) / gradient
+
+      # calculate x co-ordinate at which y axis hits it's boundary
+      xi = x + xylimit
+
+      # store interpolated position if it is within x bounds
+      if l <= xi <= r
+        points.push([xi, ylimitsigned])
+        return true
+
+    return false
+
+  # calculate a gradient
+  calcgradient = (y1, y2, dx) ->
+    return (y2 - y1) / dx
+
+  # calculate angle between three adjacent points
+  # We can assume x co-ordinate always increases and is not null
+  calcangle = (p1, p2, p3) ->
+    # check for null y values - we can't use these
+    if p1[1] === null or p2[1] === null or p3[1] === null then return null
+
+    # calculate the angle
+    return Math.atan2(p1[1] - p2[1], p1[0] - p2[0]) - Math.atan2(p3[1] - p2[1], p3[0] - p2[0])
+
+
   # partial fractions
   problems.makePartial = makePartial = ->
 
@@ -1430,19 +1478,36 @@ module.exports = (problems) ->
     drawIt = (parms) ->
       p = parms[0]; q = parms[1]; f = parms[2]; l = parms[3]; r = parms[4]
       d1 = []; d2 = []
+      ylimit = 20
+      inc = 0.01
       n = 0
 
-      for i from l to r by 0.01
-        n++
-        y1 = f(i)
+      calcpoint1 = (x) ->
+        y1 = f(x)
+        if Math.abs(y1) > ylimit then y1 = null
+        return y1
 
-        if Math.abs(y1) > 20 then y1 = null
+      calcpoint2 = (x) ->
+        y2 = p.compute(f(q.compute(x)))
+        if Math.abs(y2) > ylimit then y2 = null
+        return y2
+
+      # calculate initial yprev values for interpolation calculations
+      yprev1 = calcpoint1(l - inc)
+      yprev2 = calcpoint2(l - inc)
+
+      for i from l to r by inc
+        y1 = calcpoint1(i)
+        yinterpolate(i, y1, yprev1, ylimit, inc, calcpoint1, l, r, d1)
         d1.push([i, y1])
+        yprev1 = y1
 
-        y2 = p.compute(f(q.compute(i)))
-        if Math.abs(y2) > 20 then y2 = null
-
+        y2 = calcpoint2(i)
+        yinterpolate(i, y2, yprev2, ylimit, inc, calcpoint2, l, r, d2)
         d2.push([i, y2])
+        yprev2 = y2
+
+        n++
         if n > 2500 then i = r # prevent infiniloops
 
       #$.plot($("#graph"), [d1, d2])
@@ -1472,26 +1537,64 @@ module.exports = (problems) ->
 
     qString = "Let \\(f(x) = " + fnn[which[0]].replace(/z/g, 'x') + ", g(x) = " + fnn[which[1]].replace(/z/g, 'x') + ".\\) Sketch the graph of \\(y = f(g(x))\\) (where it exists) for \\(" + l + "\\leq{x}\\leq" + r + "\\) and \\(-12\\leq{y}\\leq12.\\)"
 
+    # generate graph points
     drawIt = (parms) ->
+      # initialise vars
       f = parms[0]; g = parms[1]; p = parms[2]; l = parms[3]; r = parms[4]
-      d1 = []
-      n = 0
+      incinit = 0.01     # initial increment by which to increase x
+      incmin = incinit / 1024 # minimum allowed increment value; 1024 gives depth 10 in adaptive sampling
+      ylimit = 12  # limit y axis
 
-      for i from l to r by 0.01
-        n++
+      # calculate series of points
+      # call recursively based on angle between three adjacent points - provides adaptive sampling
+      calcpoints = (l, r, inc) ->
+        points = [] # to store the co-ordinates of all points generated
+        angles = [null] # to store atan calculations of adjacent point triples
+        n = 0
+        yprev = calcpoint(l - inc) # store previous y value so that we can identify asymptotes
 
-        if g then y2 = g(i) else y2 = p.compute(i)
+        # increase x from lower to upper bounds with step size of increment
+        for i from l to r by inc
+          y = calcpoint(i)
 
-        if y2
+          if Math.abs(y) > ylimit
+            y = null
+
+          # interpolate to y bounds
+          if yinterpolate(i, y, yprev, ylimit, inc, calcpoint, l, r, points) then n++
+
+          yprev = y # remember current y value
+
+          n++
+          points.push([i, y])
+
+          # adaptive sampling over last three points
+          if n > 2
+            angle = calcangle(points[n-3], points[n-2], points[n-1])
+            if angle !== null && Math.abs(angle) < 1 && inc >= incmin # ~60 degree angle limit
+              subpoints = calcpoints(points[n-3][0], points[n-1][0], inc / 2)
+              points.splice(-3, 3) # remove last three points
+              points = points.concat(subpoints) # concat points arrays
+              n = n - 3 + subpoints.length # update pointer
+
+          if n > 10000 then i = r # prevent infiniloops
+
+        # return generated plot co-ordinates
+        return points
+
+      # calculate a point
+      calcpoint = (x) ->
+        if g then y2 = g(x) else y2 = p.compute(x)
+
+        if typeof y2 == 'number'
           if f then y3 = f(y2) else y3 = p.compute(y2)
         else
           y3 = null
 
-        if Math.abs(y3) > 12
-          y3 = null
+        return y3
 
-        d1.push([i, y3])
-        if n > 2500 then i = r # prevent infiniloops
+      # generate graph points
+      d1 = calcpoints(l, r, incinit)
 
       #$.plot($("#graph"), [d1])
       return [d1]
@@ -1516,6 +1619,10 @@ module.exports = (problems) ->
     fn = 0
     data = ""
 
+    xlimit = 12
+    ylimit = 12
+    inc = 0.01
+
     qString = "Sketch the curve in the \\(xy\\) plane given by \\(x = " + fnn[which[0]].replace(/z/g, 't') + ", y = " + fnn[which[1]].replace(/z/g, 't') + ". t\\) is a real parameter which ranges from \\("
 
     if which[0] and which[1]
@@ -1529,12 +1636,70 @@ module.exports = (problems) ->
       f = parms[0]; g = parms[1]; p = parms[2]; l = parms[3]
       d1 = []
 
-      for i from l to 10 by 0.01
-        if f then x = f(i) else x = p.compute(i)
-        if Math.abs(x) > 12 then x = null
+      calcpointx = (t) ->
+        if f then x = f(t) else x = p.compute(t)
+        if Math.abs(x) > xlimit then x = null
+        return x
 
-        if g then y = g(i) else y = p.compute(i)
-        if Math.abs(y) > 12 then y = null
+      calcpointy = (t) ->
+        if g then y = g(t) else y = p.compute(t)
+        if Math.abs(y) > ylimit then y = null
+        return y
+
+      xprev = calcpointx(l - inc)
+      yprev = calcpointy(l - inc)
+
+      for i from l to 10 by 0.01
+        x = calcpointx(i)
+        y = calcpointy(i)
+
+        # handle asymptotes - this is fairly hideous :|
+        if x !== null && xprev !== null
+          if (yprev === null && y !== null) || (yprev !== null && y === null)
+            ylimitsigned = ylimit
+
+            if yprev === null
+              if y < 0 then ylimitsigned = -ylimit
+              yi = calcpointy(i+inc)
+              xi = calcpointx(i+inc)
+              gradient = (yi - y) / (xi - x)
+              dx = (y - ylimitsigned) / gradient
+            else
+              if yprev < 0 then ylimitsigned = -ylimit
+              yi = calcpointy(i-(inc*2))
+              xi = calcpointx(i-(inc*2))
+              gradient = (yprev - yi) / (xprev - xi)
+              dx = (ylimitsigned - yprev) / gradient
+
+            xi = x + dx
+
+            if Math.abs(xi) <= xlimit
+              d1.push([xi, ylimitsigned])
+
+        if y !== null && yprev !== null
+          if (xprev === null && x !== null) || (xprev !== null && x === null)
+            xlimitsigned = xlimit
+
+            if xprev === null
+              if x < 0 then xlimitsigned = -xlimit
+              yi = calcpointy(i+inc)
+              xi = calcpointx(i+inc)
+              gradient = (xi - x) / (yi - y)
+              dy = (x - xlimitsigned) / gradient
+            else
+              if xprev < 0 then xlimitsigned = -xlimit
+              yi = calcpointy(i-(inc*2))
+              xi = calcpointx(i-(inc*2))
+              gradient = (xprev - xi) / (yprev - yi)
+              dy = (xlimitsigned - xprev) / gradient
+
+            yi = y + dy
+
+            if Math.abs(yi) <= ylimit
+              d1.push([xlimitsigned, yi])
+
+        xprev = x
+        yprev = y
 
         if x and y then d1.push([x, y]) else d1.push([null, null])
 
@@ -1899,7 +2064,7 @@ module.exports = (problems) ->
       drawIt = (parms) ->
         d1 = []
 
-        for i from -1 to 1 by 0.005
+        for i from -2 to 2 by 0.005 # -1 to 1 would be ideal range, but this creates a gap in the drawn ellipse due to rounding errors
           x = parms[0] * Math.cos(i * Math.PI)
           y = parms[1] * Math.sin(i * Math.PI)
           d1.push([x, y])
